@@ -56,6 +56,21 @@ $$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
 | $\nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t}  = \vec{\mathbf{0}}$                                                          | curl of $\vec{\mathbf{E}}$ is proportional to the rate of change of $\vec{\mathbf{B}}$ |
 | $\nabla \times \vec{\mathbf{B}} -\, \frac1c\, \frac{\partial\vec{\mathbf{E}}}{\partial t} = \frac{4\pi}{c}\vec{\mathbf{j}}    \nabla \cdot \vec{\mathbf{E}} = 4 \pi \rho$ | _wha?_                                                                                 |
 
+## Icons
+
+Inline icons written as `::set:name::`, rendered to inline SVG at build time:
+
+Made with ::simple-icons:vuedotjs:: Vue and ::simple-icons:typescript:: TypeScript.
+
+Size modifier is supported (icons stay single-color and follow the text color,
+adapting to light/dark themes): ::simple-icons:github =24:: ::simple-icons:pnpm =32::
+
+::: warning Prefer single-color icons
+Colored icons with fixed `/color` don't adapt to light/dark themes. Prefer
+monochrome icon sets (e.g. `simple-icons`, `tabler`, `mdi`) and avoid `/color`
+unless you intentionally brand a specific icon.
+:::
+
 ## More
 
 See [Markdown Extensions](https://vitepress.dev/guide/markdown) for more.

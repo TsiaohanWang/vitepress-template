@@ -1,9 +1,9 @@
-[
-  {
-    "text": "Examples",
-    "items": [
-      { "text": "Markdown Examples", "link": "/markdown-examples" },
-      { "text": "Runtime API Examples", "link": "/api-examples" }
-    ]
-  }
-]
+{
+  "/guide/": [
+    { "text": "模板使用指南", "link": "/guide/" }
+  ],
+  "/examples/": [
+    { "text": "Markdown Examples", "link": "/examples/markdown-examples" },
+    { "text": "Runtime API Examples", "link": "/examples/api-examples" }
+  ]
+}

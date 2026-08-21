@@ -1,4 +1,11 @@
 [
   { "text": "Home", "link": "/" },
-  { "text": "Examples", "link": "/markdown-examples" }
+  { "text": "模板指南", "link": "/guide/" },
+  {
+    "text": "Examples",
+    "items": [
+      { "text": "Markdown Examples", "link": "/examples/markdown-examples" },
+      { "text": "Runtime API Examples", "link": "/examples/api-examples" }
+    ]
+  }
 ]
