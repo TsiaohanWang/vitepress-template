@@ -9,8 +9,22 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+
+    "noEmit": true,
+    "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": true,
+
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "noUncheckedSideEffectImports": true,
+    "exactOptionalPropertyTypes": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+
     "types": ["vitepress/client"]
   },
   "include": [".vitepress/**/*.ts", "docs/**/*.ts", "*.ts"]

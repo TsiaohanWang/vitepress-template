@@ -171,13 +171,13 @@ export default {
 
 实现位于 `.vitepress/iconify.ts`：构建时查本地图标数据生成内联 SVG（含 `display:inline-block` 与基线对齐修正，规避 VitePress 全局 `svg{display:block}` 重置导致的独占一行问题）。
 
-> **优先使用单色图标**：图标默认继承当前文字颜色（`currentColor`），会随明暗主题自动切换。彩色/双色图标一旦用 `/color` 硬编码颜色，在 light/dark 切换下观感往往不佳。故推荐 `simple-icons`、`tabler`、`mdi` 等单色图标集，并避免在演示中滥用颜色修饰符。`/color` 仅用于刻意定制品牌色。
+> **优先使用单色图标**：图标默认继承当前文字颜色（`currentColor`），会随明暗主题自动切换。彩色/双色图标一旦用 `/color` 硬编码颜色，在 light/dark 切换下观感往往不佳。故推荐 `simple-icons`、`tabler`、`gravity-ui`、`mdi` 等单色图标集，并避免在演示中滥用颜色修饰符。`/color` 仅用于刻意定制品牌色。
 
 ```md
 ::simple-icons:github =24 /#181717::   # 不推荐：固定色，不随主题变化
 ```
 
-**当前内置 `simple-icons` 与 `tabler` 两个图标集**（`iconify.ts` 的 `collections` 已注册），可分别用 `::simple-icons:vuedotjs::` 与 `::tabler:home::`。如需更多单色集，按如下方式扩展：
+**当前内置 `simple-icons`、`tabler`、`gravity-ui` 三个图标集**（`iconify.ts` 的 `collections` 已注册），前缀分别为 `simple-icons:`、`tabler:`、`gravity-ui:`，例如 `::simple-icons:vuedotjs::`、`::tabler:home::`、`::gravity-ui:house::`。如需更多集，按如下方式扩展：
 
 ```sh
 pnpm add -D @iconify-json/mdi      # 1. 安装数据包
@@ -190,6 +190,7 @@ import { icons as mdi } from '@iconify-json/mdi'
 const collections = {
   'simple-icons': simpleIcons,
   tabler,
+  'gravity-ui': gravityUi,
   mdi,
 }
 ```

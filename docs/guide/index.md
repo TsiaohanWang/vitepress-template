@@ -27,6 +27,8 @@ $$ x = {-b \pm \sqrt{b^2 - 4ac} \over 2a} $$
 
 同时内置 `tabler` 图标集（线性单色风格），前缀 `tabler:`： ::tabler:home:: ::tabler:star:: ::tabler:heart:: 。
 
+以及 `gravity-ui` 图标集（Gravity UI 设计系统），前缀 `gravity-ui:`： ::gravity-ui:house:: ::gravity-ui:star:: ::gravity-ui:heart:: 。
+
 ::: warning 优先使用单色图标
 尽量选用单色图标集（如 `simple-icons`、`tabler`、`mdi`）。彩色/双色图标若硬编码颜色，在明暗主题切换时观感可能不佳；除非刻意定制品牌色，否则不要使用 `/color` 修饰符。
 :::

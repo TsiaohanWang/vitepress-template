@@ -1,5 +1,6 @@
 import { icons as simpleIcons } from '@iconify-json/simple-icons'
 import { icons as tabler } from '@iconify-json/tabler'
+import { icons as gravityUi } from '@iconify-json/gravity-ui'
 import type { IconifyJSON } from '@iconify-json/simple-icons'
 import { getIconData, iconToHTML, iconToSVG, replaceIDs } from '@iconify/utils'
 
@@ -8,6 +9,7 @@ import { getIconData, iconToHTML, iconToSVG, replaceIDs } from '@iconify/utils'
 const collections: Record<string, IconifyJSON> = {
   'simple-icons': simpleIcons,
   tabler,
+  'gravity-ui': gravityUi,
 }
 
 // Build-time renderer for @mdit/plugin-icon: emits inline SVG so icons
@@ -24,8 +26,12 @@ export const inlineSvgRender = (content: string): string => {
   }
 
   const [prefix, iconName] = nameToken.split(':', 2)
+  if (!prefix || !iconName) {
+    console.warn(`[iconify] unknown icon set or malformed name: ${nameToken}`)
+    return ''
+  }
   const collection = collections[prefix]
-  if (!collection || !iconName) {
+  if (!collection) {
     console.warn(`[iconify] unknown icon set or malformed name: ${nameToken}`)
     return ''
   }
