@@ -1,0 +1,16 @@
+{
+  "name": "vitepress-template",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "markdown-it-mathjax3": "^4.3.2",
+    "typescript": "^7.0.2",
+    "vitepress": "next",
+    "vue": "^3.5.13"
+  }
+}
