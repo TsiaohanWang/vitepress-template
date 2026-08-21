@@ -22,4 +22,6 @@ features:
     details: 官方 markdown.math 方案（markdown-it-mathjax3），公式在构建时渲染为静态 HTML，无运行时依赖。
   - title: Iconify 图标语法
     details: "emoji 风格 ::set:name:: 写法，构建时内联 SVG 嵌入段落，随字号缩放并支持尺寸/颜色修饰。"
+  - title: 主题化自定义容器
+    details: "内置与扩展共 10 种容器，Obsidian 风格主题色 + gravity-ui 标题图标；行内代码颜色跟随正文。"
 ---

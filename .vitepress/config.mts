@@ -24,6 +24,18 @@ export default defineConfig({
     // https://vitepress.dev/guide/markdown#math-equations
     math: true,
 
+    // Extra custom containers, styled in theme/custom.css
+    // (Obsidian-inspired accent colors + title icons).
+    container: {
+      customContainers: {
+        note: 'Note',
+        question: 'Question',
+        example: 'Example',
+        abstract: 'Abstract',
+        bug: 'Bug',
+      },
+    },
+
     // Emoji-like inline icons: `::set:name::`, `=size`, `/color`.
     // Rendered to inline SVG at build time (SSR-friendly).
     config: (md) => {

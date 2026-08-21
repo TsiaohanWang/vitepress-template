@@ -35,8 +35,39 @@ $$ x = {-b \pm \sqrt{b^2 - 4ac} \over 2a} $$
 
 新增图标集只需安装对应 `@iconify-json/*` 数据包并在 `.vitepress/iconify.ts` 注册（详见 README）。
 
+## 自定义容器
+
+在内置 `info / tip / warning / danger / details` 基础上，模板扩展了五种容器，均按 Obsidian 风格配置主题色与 gravity-ui 标题图标：
+
+::: note
+Note 容器（蓝色）。与 GFM Alert `> [!NOTE]` 共享同款样式。
+:::
+
+::: question 这个标题是自定义的
+Question 容器（金橙色）。`:::` 后跟类型名之外的文字会作为标题。
+:::
+
+::: example
+Example 容器（紫色）。
+:::
+
+::: abstract
+Abstract 容器（靛色）。
+:::
+
+::: bug
+Bug 容器（洋红色）。
+:::
+
+::: details
+Details 折叠容器（灰色），标题同样带图标。
+:::
+
+容器内的行内代码（如 `code`）与全站行内代码一样，字体颜色跟随所处正文颜色，仅保留底色作区分。
+
 ## 下一步
 
 - 修改 `docs/index.md` 替换首页 hero 文案
 - 编辑 `nav.json` / `sidebar.json` 调整菜单
 - 在 `docs/` 下新增 `.md` 文件即自动生成路由
+- 在 `theme/custom.css` 调整容器配色，或在 `iconify.ts` 接入更多图标集

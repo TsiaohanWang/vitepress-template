@@ -39,6 +39,29 @@ This is a warning.
 This is a dangerous warning.
 :::
 
+The template also registers five extra containers, themed in
+`.vitepress/theme/custom.css`:
+
+::: note
+This is a note container (blue).
+:::
+
+::: question
+This is a question container (amber).
+:::
+
+::: example
+This is an example container (purple).
+:::
+
+::: abstract
+This is an abstract container (indigo).
+:::
+
+::: bug
+This is a bug container (magenta).
+:::
+
 ::: details
 This is a details block.
 :::

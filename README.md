@@ -9,6 +9,7 @@
 - **导航/侧边栏 JSON 化**：`nav.json` / `sidebar.json` 放在根目录，改菜单不用碰 TS
 - **数学公式**：官方 `markdown.math` 方案（markdown-it-mathjax3），构建时渲染为静态 HTML
 - **Iconify 图标**：emoji 风格语法 `::set:name::`，构建时内联 SVG，无运行时 API 请求
+- **自定义容器与主题色**：10 种主题化容器（内置 5 种 + 扩展 5 种），Obsidian 风格配色与 gravity-ui 标题图标；行内代码颜色跟随正文
 - **SSR 保证**：公式与图标均在 Markdown 编译阶段输出为静态 HTML，页面无客户端数学/图标 JS
 
 ## 环境要求
@@ -35,7 +36,8 @@ pnpm docs:preview   # 预览构建产物 http://localhost:4173
 │  ├─ config.mts          # 站点配置入口（srcDir 指向 docs/）
 │  ├─ iconify.ts          # 图标构建时渲染器（::set:name:: → 内联 SVG）
 │  ├─ theme/
-│  │  └─ index.ts         # 主题入口，继承默认主题，可注册组件/样式
+│  │  ├─ index.ts         # 主题入口，继承默认主题并引入 custom.css
+│  │  └─ custom.css       # 自定义容器配色与标题图标（Obsidian 风格）
 │  ├─ cache/              # 开发缓存（已 gitignore）
 │  └─ dist/               # 构建产物（已 gitignore）
 ├─ docs/                  # 内容层（纯 Markdown，srcDir）
@@ -49,7 +51,7 @@ pnpm docs:preview   # 预览构建产物 http://localhost:4173
 ├─ nav.json               # 顶部导航配置
 ├─ sidebar.json           # 侧边栏配置
 ├─ package.json           # ESM（type: module）+ docs:* 脚本
-└─ tsconfig.json          # 含 vitepress/client 与 JSON 模块支持
+└─ tsconfig.json          # 严格模式类型检查（vitepress/client 类型、JSON 模块等）
 ```
 
 分离原理：CLI 以项目根为 root（因此能找到 `.vitepress/`），配置中 `srcDir: 'docs'` 把内容源指向 `docs/`。
@@ -107,24 +109,25 @@ export default defineConfig({
 
 JSON 无法携带类型，`config.mts` 中已做类型断言（`nav as DefaultTheme.NavItem[]`、`sidebar as Record<string, DefaultTheme.SidebarItem[]>`）。新增一个独立导航区块时：在 `docs/` 下新建目录放入 Markdown，并在 `nav.json` 与 `sidebar.json` 各加一条即可。可用字段见 [Default Theme Config](https://vitepress.dev/reference/default-theme-config#nav)。
 
-### 主题扩展（`.vitepress/theme/index.ts`）
+### 主题扩展（`.vitepress/theme/index.ts` + `custom.css`）
 
-默认继承官方默认主题。可在此注册全局组件、引入自定义 CSS、覆写布局插槽：
+默认继承官方主题，并已引入 `custom.css`（自定义容器的配色与标题图标）。可继续在此注册全局组件、追加样式、覆写布局插槽：
 
 ```ts
+import './custom.css'            // 自定义容器配色与标题图标（模板自带）
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
-import './custom.css'            // 引入自定义全局样式
 
 export default {
   extends: DefaultTheme,
-  enhanceApp({ app }) {
-    // app.component('MyComp', MyComp)
+
+  enhanceApp() {
+    // Extend the default theme here, e.g. register global components.
   },
 } satisfies Theme
 ```
 
-`custom.css` 与 `index.ts` 同目录（`.vitepress/theme/custom.css`），用于覆写默认主题变量或微调排版（如图标与文字间距、链接配色等）。
+`custom.css` 与 `index.ts` 同目录，用于覆写默认主题变量或微调排版；删除其中的容器样式段即可恢复 VitePress 默认容器外观。
 
 ### 静态资源与社交链接
 
@@ -204,6 +207,41 @@ const collections = {
 - `icon not found in "..."`：图标名在该集里不存在
 - 若提示 `modifiers like "=24" or "/#fff" must be separate tokens`：修饰符 `=24` / `/#fff` 必须用空格与 `set:name` 隔开，不能写成 `::set:name=24::` 这种粘连写法
 
+### 自定义容器与主题色
+
+在 VitePress 内置 `info / tip / warning / danger / details` 基础上，模板新增 `note / question / example / abstract / bug` 五种容器，全部按 Obsidian 风格配置主题色与 gravity-ui 标题图标：
+
+| 容器 | 主题色 | 标题图标 |
+|---|---|---|
+| info | 青色 | gravity-ui:circle-info |
+| note | 蓝色 | gravity-ui:pencil-to-square |
+| tip | 绿色 | gravity-ui:bulb |
+| abstract | 靛色 | gravity-ui:binoculars |
+| question | 金橙 | gravity-ui:circle-question |
+| warning | 橙色 | gravity-ui:triangle-exclamation |
+| danger | 红色 | gravity-ui:shield-exclamation |
+| bug | 洋红 | gravity-ui:bug |
+| example | 紫色 | gravity-ui:shapes-3 |
+| details | 灰色 | gravity-ui:magnifier |
+
+```md
+::: bug
+Bug 容器。
+:::
+
+::: question 自定义标题
+标题文字支持自定义。
+:::
+```
+
+说明：
+- 主题色同时作用于容器背景（7% 不透明度）、边框（35%）与标题文字；正文保持常规文字色
+- 行内代码字体颜色跟随所处正文颜色（全站生效，容器内亦然），仅保留代码底色以作区分
+- 标题图标以 CSS mask 方式内嵌（gravity-ui SVG data URI），纯静态资源、SSR 友好，颜色自动跟随标题色
+- 暗色模式下强调色自动调亮以保证对比度
+- GFM Alert 与同名容器共享样式：`> [!NOTE]` 即蓝色 note 效果；VitePress 原生支持 `> [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION]`
+- 新增类型两步：在 `config.mts` 的 `markdown.container.customContainers` 注册，并在 `theme/custom.css` 补充该类型的 `--cb-rgb` 与 `--cb-icon`
+
 ## 类型检查
 
 ```sh
@@ -213,8 +251,6 @@ pnpm exec tsc --noEmit
 覆盖 `.vitepress/**/*.ts` 与根目录 `*.ts`；JSON 导入依赖 tsconfig 的 `resolveJsonModule`。
 
 > 构建时可能出现 `import "./iconify" without a file extension` 与 `JSON import "../nav.json" without import attributes` 提示，这是 Vite 8 原生配置加载器的兼容提示，不影响功能，可忽略。
->
-> 若按上文在 `theme/index.ts` 添加 `import './custom.css'`，需确保 `.vitepress/theme/custom.css` 文件确实存在，否则构建会报模块缺失。
 
 ## 部署
 
