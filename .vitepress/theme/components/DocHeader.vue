@@ -45,7 +45,7 @@ const dateText = computed(() => {
 
 .doc-header-title {
   margin: 0;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 600;
   line-height: 1.3;
   color: var(--vp-c-text-1);

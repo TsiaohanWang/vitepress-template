@@ -121,6 +121,12 @@
   display: none;
 }
 
+/* Table headers default to centered alignment; per-column markdown
+   alignment (| :--- | :---: | ---:) still wins via inline styles. */
+.vp-doc th {
+  text-align: center;
+}
+
 /* Code typeface: self-hosted JetBrains Mono. The woff2 files are bundled
    by Vite into hashed assets at build time (SSR-safe: no runtime requests,
    no client JS); font-display: swap renders text with the fallback stack
