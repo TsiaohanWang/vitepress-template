@@ -1,10 +1,12 @@
 /* Custom containers: Obsidian-inspired accent colors + gravity-ui title icons.
    Icons are gravity-ui SVGs (16x16 grid) baked as data URIs -- static CSS,
    SSR-safe, no runtime JS; icon color follows the title via currentColor mask.
-   Accent palette (RGB triplets) is defined per type below. */
+   Each container type only declares its accent palette (--cb-rgb) and title
+   icon (--cb-icon) below; every other rule targets .custom-block generically
+   so adding a new type never requires touching more CSS. */
 
 .vp-doc .custom-block.info { --cb-rgb: 0 191 188; --cb-icon: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16'%3E%3Cpath fill%3D%22currentColor%22 fill-rule%3D%22evenodd%22 d%3D%22M8 13.5a5.5 5.5 0 1 0 0-11a5.5 5.5 0 0 0 0 11M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14m1-9.5a1 1 0 1 1-2 0a1 1 0 0 1 2 0m-.25 3a.75.75 0 0 0-1.5 0V11a.75.75 0 0 0 1.5 0z%22 clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E"); }
-.vp-doc .custom-block.note { --cb-rgb: 8 109 221; --cb-icon: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16'%3E%3Cpath fill%3D%22currentColor%22 fill-rule%3D%22evenodd%22 d%3D%22M6.169 6.331a3 3 0 0 0-.833 1.6l-.338 1.912a1 1 0 0 0 1.159 1.159l1.912-.338a3 3 0 0 0 1.6-.833l3.07-3.07l2-2A.9.9 0 0 0 15 4.13A3.13 3.13 0 0 0 11.87 1a.9.9 0 0 0-.632.262l-2 2zm3.936-1.814L7.229 7.392a1.5 1.5 0 0 0-.416.8L6.6 9.4l1.208-.213l.057-.01a1.5 1.5 0 0 0 .743-.406l2.875-2.876a1.63 1.63 0 0 0-1.378-1.378m2.558.199a3.14 3.14 0 0 0-1.379-1.38l.82-.82a1.63 1.63 0 0 1 1.38 1.38zM8 2.25a.75.75 0 0 0-.75-.75H4.5a3 3 0 0 0-3 3v7a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V8.75a.75.75 0 0 0-1.5 0v2.75a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 11.5v-7A1.5 1.5 0 0 1 4.5 3h2.75A.75.75 0 0 0 8 2.25%22 clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E"); }
+.vp-doc .custom-block.note { --cb-rgb: 8 109 221; --cb-icon: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16'%3E%3Cpath fill%3D%22currentColor%22 fill-rule%3D%22evenodd%22 d%3D%22M6.169 6.331a3 3 0 0 0-.833 1.6l-.338 1.912a1 1 0 0 0 1.159 1.159l1.912-.338a3 3 0 0 0 1.6-.833l3.07-3.07l2-2A.9.9 0 0 0 15 4.13A3.13 3.13 0 0 0 11.87 1a.9.9 0 0 0-.632.262l-2 2zm3.936-1.814L7.229 7.392a1.5 1.5 0 0 0-.416.8L6.6 9.4l1.208-.213l.057-.01a1.5 1.5 0 0 0 .743-.406l2.875-2.876a1.63 1.63 0 0 0-1.378-1.378m2.558.199a3.14 3.14 0 0 0-1.379-1.38l.82-.82a1.63 1.63 0 0 1 1.38 1.38zM8 2.25a.75.75 0 0 0-.75-.75H4.5a3 3 0 0 0-3 3v7a3 3 0 0 0 3 3h7a3 3 0 0 0 3-3V8.75a.75.75 0 0 1-1.5 0v2.75a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 11.5v-7A1.5 1.5 0 0 1 4.5 3h2.75A.75.75 0 0 0 8 2.25%22 clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E"); }
 .vp-doc .custom-block.tip { --cb-rgb: 68 207 110; --cb-icon: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16'%3E%3Cg fill%3D%22currentColor%22%3E%3Cpath fill-rule%3D%22evenodd%22 d%3D%22M6.26 15.109a4 4 0 0 0 3.48 0l.13-.063a2 2 0 0 0 1.13-1.8v-.468c0-1.352.776-2.557 1.54-3.673a5.5 5.5 0 1 0-9.08 0C4.224 10.221 5 11.426 5 12.779v.467a2 2 0 0 0 1.13 1.801zm2.828-1.35l.13-.064a.5.5 0 0 0 .282-.45v-.467q0-.255.025-.5a5.33 5.33 0 0 1-3.05 0q.024.245.025.5v.467a.5.5 0 0 0 .282.45l.13.063a2.5 2.5 0 0 0 2.176 0m-4.39-5.501c.394.576.891 1.302 1.263 2.148a3.79 3.79 0 0 0 4.078 0c.372-.846.869-1.572 1.264-2.148a4 4 0 1 0-6.605 0%22 clip-rule%3D%22evenodd%22%2F%3E%3Cpath d%3D%22M8 3.5A.75.75 0 0 0 8 5a1 1 0 0 1 1 1a.75.75 0 0 0 1.5 0A2.5 2.5 0 0 0 8 3.5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
 .vp-doc .custom-block.abstract { --cb-rgb: 91 110 245; --cb-icon: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16'%3E%3Cg fill%3D%22none%22%3E%3Cg clip-path%3D%22url(%23SVGRVeuBdhT)%22%3E%3Cpath fill%3D%22currentColor%22 fill-rule%3D%22evenodd%22 d%3D%22M1.522 10.68a2.14 2.14 0 0 0 2.11 1.82a2.125 2.125 0 1 0-2.11-1.82M3.64 14h-.015a3.626 3.626 0 0 1-3.558-2.927a3.6 3.6 0 0 1 .256-2.212L2.98 2.98a2.516 2.516 0 0 1 4.802 1.237L7.673 5.6a1.5 1.5 0 0 1 .655 0l-.11-1.382a2.516 2.516 0 0 1 4.801-1.237l2.658 5.88a3.6 3.6 0 0 1 .256 2.213A3.626 3.626 0 0 1 12.375 14h-.015a3.64 3.64 0 0 1-3.628-3.35l-.174-2.176A.96.96 0 0 0 8 8.312a.96.96 0 0 0-.558.162l-.174 2.176A3.64 3.64 0 0 1 3.64 14m-.015-7.25c.91 0 1.742.336 2.379.89l.283-3.542a1.016 1.016 0 0 0-1.94-.5L2.89 6.825a3.6 3.6 0 0 1 .736-.075m10.853 3.93q.022-.15.022-.305a2.125 2.125 0 1 0-2.132 2.125a2.14 2.14 0 0 0 2.11-1.82m-2.826-7.082l1.459 3.227a3.61 3.61 0 0 0-3.115.815l-.283-3.542a1.016 1.016 0 0 1 1.94-.5%22 clip-rule%3D%22evenodd%22%2F%3E%3C%2Fg%3E%3Cdefs%3E%3CclipPath id%3D%22SVGRVeuBdhT%22%3E%3Cpath fill%3D%22currentColor%22 d%3D%22M0 0h16v16H0z%22%2F%3E%3C%2FclipPath%3E%3C%2Fdefs%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
 .vp-doc .custom-block.question { --cb-rgb: 236 153 37; --cb-icon: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16'%3E%3Cpath fill%3D%22currentColor%22 fill-rule%3D%22evenodd%22 d%3D%22M8 13.5a5.5 5.5 0 1 0 0-11a5.5 5.5 0 0 0 0 11M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14M6.44 4.54c.43-.354.994-.565 1.56-.565c1.217 0 2.34.82 2.34 2.14c0 .377-.078.745-.298 1.1c-.208.339-.513.614-.875.867c-.217.153-.325.257-.379.328c-.038.052-.038.07-.038.089a.75.75 0 0 1-1.5 0c0-.794.544-1.286 1.057-1.645c.28-.196.4-.332.458-.426a.54.54 0 0 0 .075-.312c0-.3-.244-.641-.84-.641a1 1 0 0 0-.608.223c-.167.138-.231.287-.231.418a.75.75 0 0 1-1.5 0c0-.674.345-1.22.78-1.577M8 12a1 1 0 1 0 0-2a1 1 0 0 0 0 2%22 clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E"); }
@@ -14,61 +16,30 @@
 .vp-doc .custom-block.bug { --cb-rgb: 219 39 119; --cb-icon: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16'%3E%3Cg fill%3D%22none%22%3E%3Cg clip-path%3D%22url(%23SVGRVeuBdhT)%22%3E%3Cpath fill%3D%22currentColor%22 fill-rule%3D%22evenodd%22 d%3D%22M5.865.031a.75.75 0 0 1 .918.53l.531 1.981a5.55 5.55 0 0 1 2.384.225a2.5 2.5 0 1 1 3.535 3.535a5.5 5.5 0 0 1 .225 2.384l1.98.53a.75.75 0 0 1-.388 1.45l-1.98-.531q-.271.64-.687 1.188l1.45 1.45a.75.75 0 0 1-1.06 1.06l-1.45-1.45a5.5 5.5 0 0 1-1.188.687l.53 1.98a.75.75 0 1 1-1.448.388l-.531-1.98a5.5 5.5 0 0 1-6.144-6.143l-1.98-.532A.75.75 0 0 1 .95 5.334l1.98.531q.27-.64.687-1.188l-1.45-1.45a.75.75 0 0 1 1.06-1.06l1.45 1.45a5.5 5.5 0 0 1 1.188-.687L5.335.95a.75.75 0 0 1 .53-.919M8 12a4 4 0 1 0-3.309-1.752L8.42 6.52a.75.75 0 0 1 1.06 1.06l-3.728 3.73c.64.435 1.414.69 2.248.69%22 clip-rule%3D%22evenodd%22%2F%3E%3C%2Fg%3E%3Cdefs%3E%3CclipPath id%3D%22SVGRVeuBdhT%22%3E%3Cpath fill%3D%22currentColor%22 d%3D%22M0 0h16v16H0z%22%2F%3E%3C%2FclipPath%3E%3C%2Fdefs%3E%3C%2Fg%3E%3C%2Fsvg%3E"); }
 .vp-doc .custom-block.details { --cb-rgb: 158 158 158; --cb-icon: url("data:image/svg+xml,%3Csvg xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox%3D'0 0 16 16'%3E%3Cpath fill%3D%22currentColor%22 fill-rule%3D%22evenodd%22 d%3D%22M11.5 7a4.5 4.5 0 1 1-9 0a4.5 4.5 0 0 1 9 0m-.82 4.74a6 6 0 1 1 1.06-1.06l2.79 2.79a.75.75 0 1 1-1.06 1.06z%22 clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E"); }
 
-.vp-doc .custom-block.info,
-.vp-doc .custom-block.note,
-.vp-doc .custom-block.tip,
-.vp-doc .custom-block.abstract,
-.vp-doc .custom-block.question,
-.vp-doc .custom-block.example,
-.vp-doc .custom-block.warning,
-.vp-doc .custom-block.danger,
-.vp-doc .custom-block.bug,
-.vp-doc .custom-block.details {
+/* Shared pipeline for ALL custom blocks (builtin and future types alike).
+   Specificity note: the default theme styles containers at (0,2,0); these
+   selectors match that level and win by bundle order (custom.css is
+   imported last in theme/index.ts). Dark overrides outrank light rules.
+   A type without variables above degrades gracefully to the default look. */
+.vp-doc .custom-block {
   --cb-accent: rgb(var(--cb-rgb));
   border-color: rgb(var(--cb-rgb) / 0.35);
   background-color: rgb(var(--cb-rgb) / 0.07);
   color: var(--vp-c-text-1);
 }
 
-.dark .vp-doc .custom-block.info,
-.dark .vp-doc .custom-block.note,
-.dark .vp-doc .custom-block.tip,
-.dark .vp-doc .custom-block.abstract,
-.dark .vp-doc .custom-block.question,
-.dark .vp-doc .custom-block.example,
-.dark .vp-doc .custom-block.warning,
-.dark .vp-doc .custom-block.danger,
-.dark .vp-doc .custom-block.bug,
-.dark .vp-doc .custom-block.details {
+.dark .vp-doc .custom-block {
   --cb-accent: color-mix(in srgb, rgb(var(--cb-rgb)) 65%, white);
   border-color: rgb(var(--cb-rgb) / 0.45);
 }
 
-.vp-doc .custom-block.info .custom-block-title,
-.vp-doc .custom-block.note .custom-block-title,
-.vp-doc .custom-block.tip .custom-block-title,
-.vp-doc .custom-block.abstract .custom-block-title,
-.vp-doc .custom-block.question .custom-block-title,
-.vp-doc .custom-block.example .custom-block-title,
-.vp-doc .custom-block.warning .custom-block-title,
-.vp-doc .custom-block.danger .custom-block-title,
-.vp-doc .custom-block.bug .custom-block-title,
-.vp-doc .custom-block.details .custom-block-title,
-.vp-doc .custom-block.details > summary {
+.vp-doc .custom-block .custom-block-title,
+.vp-doc .custom-block > summary {
   color: var(--cb-accent);
 }
 
-.vp-doc .custom-block.info .custom-block-title::before,
-.vp-doc .custom-block.note .custom-block-title::before,
-.vp-doc .custom-block.tip .custom-block-title::before,
-.vp-doc .custom-block.abstract .custom-block-title::before,
-.vp-doc .custom-block.question .custom-block-title::before,
-.vp-doc .custom-block.example .custom-block-title::before,
-.vp-doc .custom-block.warning .custom-block-title::before,
-.vp-doc .custom-block.danger .custom-block-title::before,
-.vp-doc .custom-block.bug .custom-block-title::before,
-.vp-doc .custom-block.details .custom-block-title::before,
-.vp-doc .custom-block.details > summary::before {
+.vp-doc .custom-block .custom-block-title::before,
+.vp-doc .custom-block > summary::before {
   content: '';
   display: inline-block;
   width: 1em;
@@ -122,7 +93,7 @@
 }
 
 /* Table headers default to centered alignment; per-column markdown
-   alignment (| :--- | :---: | ---:) still wins via inline styles. */
+    alignment (| :--- | :---: | ---:) still wins via inline styles. */
 .vp-doc th {
   text-align: center;
 }
@@ -154,31 +125,14 @@ html:not(.dark) {
   --vp-c-brand-soft: rgba(247, 76, 0, 0.16);
 }
 
-/* Inline code background follows the container accent (consistent with
-   its background/border/title), overriding the theme's fixed per-type
-   palettes and the global gray fallback for our extended types. */
-.vp-doc .custom-block.info :not(pre)>code,
-.vp-doc .custom-block.note :not(pre)>code,
-.vp-doc .custom-block.tip :not(pre)>code,
-.vp-doc .custom-block.abstract :not(pre)>code,
-.vp-doc .custom-block.question :not(pre)>code,
-.vp-doc .custom-block.example :not(pre)>code,
-.vp-doc .custom-block.warning :not(pre)>code,
-.vp-doc .custom-block.danger :not(pre)>code,
-.vp-doc .custom-block.bug :not(pre)>code,
-.vp-doc .custom-block.details :not(pre)>code {
+/* Inline code background inside containers follows the container accent
+   (consistent with its background/border/title), overriding the theme's
+   fixed per-type palettes; :not(pre)>code also out-specifies the theme's
+   `.type code` rules outright, so bundle order is not relied on here. */
+.vp-doc .custom-block :not(pre)>code {
   background-color: rgb(var(--cb-rgb) / 0.1);
 }
 
-.dark .vp-doc .custom-block.info :not(pre)>code,
-.dark .vp-doc .custom-block.note :not(pre)>code,
-.dark .vp-doc .custom-block.tip :not(pre)>code,
-.dark .vp-doc .custom-block.abstract :not(pre)>code,
-.dark .vp-doc .custom-block.question :not(pre)>code,
-.dark .vp-doc .custom-block.example :not(pre)>code,
-.dark .vp-doc .custom-block.warning :not(pre)>code,
-.dark .vp-doc .custom-block.danger :not(pre)>code,
-.dark .vp-doc .custom-block.bug :not(pre)>code,
-.dark .vp-doc .custom-block.details :not(pre)>code {
+.dark .vp-doc .custom-block :not(pre)>code {
   background-color: rgb(var(--cb-rgb) / 0.16);
 }

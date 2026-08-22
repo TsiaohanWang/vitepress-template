@@ -14,6 +14,22 @@ const collections: Record<string, IconifyJSON> = {
   'circle-flags': circleFlags,
 }
 
+// Whitelists for the `=size` / `/color` modifiers: size must be a plain
+// CSS length, color a hex or named value. Anything else is rejected
+// before it can reach the generated SVG attributes/style, so a typo can
+// never inject markup or CSS into the built HTML.
+const SIZE_PATTERN = /^\d+(?:\.\d+)?(?:em|rem|px|%)?$/
+const COLOR_PATTERN = /^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]+)$/
+
+// Set ICONIFY_STRICT=1 (e.g. in CI) to turn every icon warning into a
+// hard build failure instead of silently dropping the icon.
+const strict = process.env.ICONIFY_STRICT === '1'
+
+const fail = (message: string): void => {
+  if (strict) throw new Error(`[iconify] ${message}`)
+  console.warn(`[iconify] ${message}`)
+}
+
 // Build-time renderer for @mdit/plugin-icon: emits inline SVG so icons
 // are part of the server-rendered HTML (no runtime/API dependency).
 export const inlineSvgRender = (content: string): string => {
@@ -21,20 +37,18 @@ export const inlineSvgRender = (content: string): string => {
 
   const nameToken = tokens.find((token) => token.includes(':'))
   if (!nameToken) {
-    console.warn(
-      `[iconify] malformed icon syntax, expected "set:name": ::${content.trim()}::`,
-    )
+    fail(`malformed icon syntax, expected "set:name": ::${content.trim()}::`)
     return ''
   }
 
   const [prefix, iconName] = nameToken.split(':', 2)
   if (!prefix || !iconName) {
-    console.warn(`[iconify] unknown icon set or malformed name: ${nameToken}`)
+    fail(`unknown icon set or malformed name: ${nameToken}`)
     return ''
   }
   const collection = collections[prefix]
   if (!collection) {
-    console.warn(`[iconify] unknown icon set or malformed name: ${nameToken}`)
+    fail(`unknown icon set or malformed name: ${nameToken}`)
     return ''
   }
 
@@ -43,13 +57,31 @@ export const inlineSvgRender = (content: string): string => {
     const hint = /[=/]/.test(iconName)
       ? ' (modifiers like "=24" or "/#fff" must be separate tokens, not attached to the name)'
       : ''
-    console.warn(`[iconify] icon not found in "${prefix}": ${iconName}${hint}`)
+    fail(`icon not found in "${prefix}": ${iconName}${hint}`)
     return ''
   }
 
-  // Supported modifiers: `=size` (any CSS length) and `/color`.
-  const size = tokens.find((token) => token.startsWith('='))?.slice(1)
-  const color = tokens.find((token) => token.startsWith('/'))?.slice(1)
+  // Supported modifiers: `=size` and `/color`, each a separate token.
+  // Invalid values warn and are ignored; the bare icon still renders.
+  let size: string | undefined
+  const rawSize = tokens.find((token) => token.startsWith('=') && token.length > 1)?.slice(1)
+  if (rawSize !== undefined) {
+    if (SIZE_PATTERN.test(rawSize)) {
+      size = rawSize
+    } else {
+      fail(`invalid size modifier "=${rawSize}", expected e.g. "=24" or "=1.5em"`)
+    }
+  }
+
+  let color: string | undefined
+  const rawColor = tokens.find((token) => token.startsWith('/') && token.length > 1)?.slice(1)
+  if (rawColor !== undefined) {
+    if (COLOR_PATTERN.test(rawColor)) {
+      color = rawColor
+    } else {
+      fail(`invalid color modifier "/${rawColor}", expected hex or named color`)
+    }
+  }
 
   // Default height is 1em so the icon always follows the surrounding
   // font size. VitePress's base reset forces `svg { display: block }`,

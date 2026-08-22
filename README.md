@@ -13,10 +13,12 @@
 - **等宽字体**：自托管 JetBrains Mono（Fontsource 打包），覆盖代码块/行内代码/kbd，离线可用
 - **SSR 保证**：公式与图标均在 Markdown 编译阶段输出为静态 HTML，页面无客户端数学/图标 JS
 
+> 各项能力的完整说明、示例与排错表见站点内的 [内置增强与排错](/guide/enhancements) 页面。
+
 ## 环境要求
 
-- Node.js ≥ 22
-- pnpm（推荐）
+- Node.js ≥ 22（`engines` 字段强制，需 pnpm ≥ 10 读取 `pnpm-workspace.yaml`）
+- pnpm（推荐，`packageManager` 字段锁定版本）
 
 ## 快速开始
 
@@ -35,7 +37,9 @@ pnpm docs:preview   # 预览构建产物 http://localhost:4173
 .
 ├─ .vitepress/            # 配置层（VitePress 专属，不放正文）
 │  ├─ config.mts          # 站点配置入口（srcDir 指向 docs/）
+│  ├─ frontmatter.ts      # keywords 归一化（构建校验与组件共用）
 │  ├─ iconify.ts          # 图标构建时渲染器（::set:name:: → 内联 SVG）
+│  ├─ markdown-guards.ts  # 花括号安全防护插件（正文 {{ }} 自动转义）
 │  ├─ env.d.ts            # .vue 单文件组件类型垫片
 │  ├─ theme/
 │  │  ├─ index.ts         # 主题入口：JetBrains Mono 字重 + DocHeader 插槽 + custom.css
@@ -48,14 +52,16 @@ pnpm docs:preview   # 预览构建产物 http://localhost:4173
 │  ├─ index.md            # 首页（hero + features 布局），路由 /
 │  ├─ public/             # 静态资源（favicon 等，按原路径拷贝到产物根）
 │  ├─ guide/              # 模板指南 section，对应 /guide/
-│  │  └─ index.md
+│  │  ├─ index.md
+│  │  └─ enhancements.md  # 内置增强与排错（站内指南页）
 │  └─ examples/           # Examples section，对应 /examples/...
 │     ├─ markdown-examples.md
 │     └─ api-examples.md
 ├─ nav.json               # 顶部导航配置
 ├─ sidebar.json           # 侧边栏配置
-├─ package.json           # ESM（type: module）+ docs:* 脚本
-└─ tsconfig.json          # 严格模式类型检查（vitepress/client 类型、JSON 模块等）
+├─ package.json           # ESM（type: module）+ docs:* 脚本 + engines/packageManager
+├─ pnpm-workspace.yaml    # pnpm 设置（peer 豁免等）
+└─ tsconfig.json          # 严格模式类型检查（.ts 与 .mts 全覆盖、JSON 模块等）
 ```
 
 分离原理：CLI 以项目根为 root（因此能找到 `.vitepress/`），配置中 `srcDir: 'docs'` 把内容源指向 `docs/`。
@@ -102,7 +108,8 @@ export default defineConfig({
 ```json
 {
   "/guide/": [
-    { "text": "模板使用指南", "link": "/guide/" }
+    { "text": "模板使用指南", "link": "/guide/" },
+    { "text": "内置增强与排错", "link": "/guide/enhancements" }
   ],
   "/examples/": [
     { "text": "Markdown Examples", "link": "/examples/markdown-examples" },
@@ -159,166 +166,26 @@ export default {
 3. `sidebar.json` 增加一条以该目录路由前缀为 key 的侧边栏
 4. `pnpm docs:dev` 即时预览
 
-
 ## 内容写作
 
 - 文件即路由：`docs/foo.md` → `/foo`；`docs/foo/index.md` → `/foo/`
 - 首页使用 `layout: home` frontmatter（见 `docs/index.md`）
 - Markdown 扩展（容器、代码组、行高亮等）见 [官方文档](https://vitepress.dev/guide/markdown)
+- 数学公式、Iconify 图标、自定义容器、文章元数据等模板增强的用法与排错全部收录在站内 [内置增强与排错](/guide/enhancements)
 
-## 内置增强
+## 内置增强速览
 
-### 数学公式
+| 能力 | 一句话说明 |
+|---|---|
+| 数学公式 | `markdown.math` 构建时渲染，无客户端 JS |
+| Iconify 图标 | `::set:name::` 语法内联 SVG，修饰符白名单校验 |
+| 自定义容器 | 10 种 Obsidian 风格主题色容器 + gravity-ui 标题图标 |
+| 等宽字体 | 自托管 JetBrains Mono，离线可用 |
+| 文章元数据 | frontmatter 驱动 DocHeader，title/keywords 构建期强校验 |
+| 品牌色 | #F74C00 明暗双套变量 |
+| 花括号防护 | 正文 `{{ }}` 自动转义，杜绝 Vue 插值误伤 |
 
-已启用 `markdown.math: true`（依赖 `markdown-it-mathjax3@^4`，勿移除——该选项缺失依赖时构建会直接报错）。
-
-```md
-行内：$a \ne 0$
-块级：$$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
-```
-
-公式在构建时由 MathJax 渲染为静态 `<mjx-container>`，无需客户端运行时。
-
-### Iconify 图标
-
-语法：`::图标集前缀:图标名::`，必须写全称；支持两个修饰符：
-
-```md
-默认尺寸（1em，随字号缩放）：::simple-icons:vuedotjs::
-仅指定尺寸（仍单色）：::simple-icons:github =24::
-```
-
-> 采用双冒号 `::name::` 而非单冒号，是为了与 VitePress 内置的 emoji 语法 `:tada:` 区分，二者互不冲突、可共存。
-
-实现位于 `.vitepress/iconify.ts`：构建时查本地图标数据生成内联 SVG（含 `display:inline-block` 与基线对齐修正，规避 VitePress 全局 `svg{display:block}` 重置导致的独占一行问题）。
-
-> **优先使用单色图标**：图标默认继承当前文字颜色（`currentColor`），会随明暗主题自动切换。彩色/双色图标一旦用 `/color` 硬编码颜色，在 light/dark 切换下观感往往不佳。故推荐 `simple-icons`、`tabler`、`gravity-ui`、`mdi` 等单色图标集，并避免在演示中滥用颜色修饰符。`/color` 仅用于刻意定制品牌色；`circle-flags` 国旗集是合理例外——国旗本身即为彩色且不随主题变化。
-
-```md
-::simple-icons:github =24 /#181717::   # 不推荐：固定色，不随主题变化
-```
-
-**当前内置 `simple-icons`、`tabler`、`gravity-ui`、`circle-flags` 四个图标集**（`iconify.ts` 的 `collections` 已注册），前缀分别为 `simple-icons:`、`tabler:`、`gravity-ui:`、`circle-flags:`，例如 `::simple-icons:vuedotjs::`、`::tabler:home::`、`::gravity-ui:house::`、`::circle-flags:cn::`。如需更多集，按如下方式扩展：
-
-```sh
-pnpm add -D @iconify-json/mdi      # 1. 安装数据包
-```
-
-```ts
-// 2. .vitepress/iconify.ts 注册
-import { icons as mdi } from '@iconify-json/mdi'
-
-const collections = {
-  'simple-icons': simpleIcons,
-  tabler,
-  'gravity-ui': gravityUi,
-  'circle-flags': circleFlags,
-  mdi,
-}
-```
-
-之后即可用 `::mdi:home::`。图标名可在 [icon-sets.iconify.design](https://icon-sets.iconify.design/) 检索。
-
-#### 排错：图标不显示？
-
-图标语法有误时，构建会在终端打印 `[iconify]` 警告并**丢弃该图标**（不会中断构建）：
-- `unknown icon set or malformed name`：前缀写错，或未使用 `set:name` 全称
-- `icon not found in "..."`：图标名在该集里不存在
-- 若提示 `modifiers like "=24" or "/#fff" must be separate tokens`：修饰符 `=24` / `/#fff` 必须用空格与 `set:name` 隔开，不能写成 `::set:name=24::` 这种粘连写法
-
-### 自定义容器与主题色
-
-在 VitePress 内置 `info / tip / warning / danger / details` 基础上，模板新增 `note / question / example / abstract / bug` 五种容器，全部按 Obsidian 风格配置主题色与 gravity-ui 标题图标：
-
-| 容器 | 主题色 | 标题图标 |
-|---|---|---|
-| info | 青色 | gravity-ui:circle-info |
-| note | 蓝色 | gravity-ui:pencil-to-square |
-| tip | 绿色 | gravity-ui:bulb |
-| abstract | 靛色 | gravity-ui:binoculars |
-| question | 金橙 | gravity-ui:circle-question |
-| warning | 橙色 | gravity-ui:triangle-exclamation |
-| danger | 红色 | gravity-ui:shield-exclamation |
-| bug | 洋红 | gravity-ui:bug |
-| example | 紫色 | gravity-ui:shapes-3 |
-| details | 灰色 | gravity-ui:magnifier |
-
-```md
-::: bug
-Bug 容器。
-:::
-
-::: question 自定义标题
-标题文字支持自定义。
-:::
-```
-
-说明：
-- 主题色同时作用于容器背景（7% 不透明度）、边框（35%）与标题文字；正文保持常规文字色
-- 行内代码与链接的字体颜色跟随所处正文颜色（全站生效，容器内亦然）；行内代码保留底色、链接保留下划线与 hover 反馈以作区分
-- 容器内的行内代码底色随容器主题色（明亮 10% / 暗色 16% 不透明度），与容器背景、边框同源；围栏代码块不受影响
-- 标题图标以 CSS mask 方式内嵌（gravity-ui SVG data URI），纯静态资源、SSR 友好，颜色自动跟随标题色
-- 暗色模式下强调色自动调亮以保证对比度
-- GFM Alert 与同名容器共享样式：`> [!NOTE]` 即蓝色 note 效果；VitePress 原生支持 `> [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION]`
-- 新增类型两步：在 `config.mts` 的 `markdown.container.customContainers` 注册，并在 `theme/custom.css` 补充该类型的 `--cb-rgb` 与 `--cb-icon`
-
-### 等宽字体（JetBrains Mono）
-
-代码块、行内代码、`kbd`、行号的等宽字体已默认切换为自托管的 JetBrains Mono：
-
-- 字体文件来自 `@fontsource/jetbrains-mono`（400/700 字重），在 `theme/index.ts` 中引入；构建时 woff2 被打包为带哈希的本地静态资源，运行时零第三方请求，SSR/离线友好
-- `font-display: swap` 保证文字先用系统回退栈即时渲染，不阻塞首屏
-- 回退栈与全局切换点在 `theme/custom.css` 的 `--vp-font-family-mono` 变量；更换其他字体只需安装对应 Fontsource 包、替换引入并修改变量
-
-### 文章元数据（frontmatter）
-
-内容页通过 frontmatter 声明文章信息，`DocHeader` 组件自动渲染在正文头部（`doc-before` 插槽，构建时 SSR 输出）：
-
-| 字段 | 必填 | 说明 |
-|---|---|---|
-| title | ✅ | 主标题；同时作为浏览器标签页标题 |
-| subtitle | – | 副标题 |
-| author | – | 作者 |
-| date | – | 日期，展示为 YYYY-MM-DD |
-| keywords | ✅ | 关键词标签；数组或逗号分隔字符串均可（构建时归一化为数组） |
-
-```md
----
-title: 模板使用指南
-subtitle: 配置与内容分离的 VitePress 文档模板
-author: TsiaohanWang
-date: 2026-08-22
-keywords:
-  - VitePress
-  - 模板
----
-```
-
-- 校验在 `config.mts` 的 `transformPageData` 中执行：非首页内容页缺失 `title` 或 `keywords` 时**构建直接失败**，错误信息指明文件与缺失字段
-- `layout: home` 的首页不受校验约束
-- 作者/日期/标签自带 gravity-ui 图标（CSS mask，SSR 友好）；样式位于组件的 scoped style
-
-### 站点品牌色
-
-站点品牌色为 **#F74C00**（橙红），作用于链接 hover、按钮、侧边栏/导航高亮、hero 按钮等全部品牌色场景。明暗两套定义在 `theme/custom.css`：
-
-```css
-html:not(.dark) {
-  --vp-c-brand-1: #f74c00;   /* 主强调色 */
-  --vp-c-brand-2: #ff7a3d;   /* hover 提亮 */
-  --vp-c-brand-3: #d63e00;   /* 实心按钮底色 */
-  --vp-c-brand-soft: rgba(247, 76, 0, 0.14);
-}
-
-.dark {
-  --vp-c-brand-1: #ff8a52;   /* 暗底提亮，保证对比度 */
-  --vp-c-brand-2: #ffa475;
-  --vp-c-brand-3: #f74c00;
-  --vp-c-brand-soft: rgba(247, 76, 0, 0.16);
-}
-```
-
-更换品牌色时同步修改两个块即可；`--vp-c-brand-1/2/3` 分别对应常规/hover/实心三态。
+详细用法、示例与排错表：[内置增强与排错](/guide/enhancements)。
 
 ## 类型检查
 
@@ -326,7 +193,7 @@ html:not(.dark) {
 pnpm exec tsc --noEmit
 ```
 
-覆盖 `.vitepress/**/*.ts` 与根目录 `*.ts`；JSON 导入依赖 tsconfig 的 `resolveJsonModule`。
+覆盖 `.vitepress/**/*.ts`、`.vitepress/config.mts` 与根目录 `.ts`/`.mts`；JSON 导入依赖 tsconfig 的 `resolveJsonModule`。
 
 > 构建时可能出现 `import "./iconify" without a file extension` 与 `JSON import "../nav.json" without import attributes` 提示，这是 Vite 8 原生配置加载器的兼容提示，不影响功能，可忽略。
 

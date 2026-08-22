@@ -1,16 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useData } from 'vitepress'
+import { normalizeKeywords } from '../../frontmatter'
 
 const { frontmatter } = useData()
 
-// Validation in config.mts (transformPageData) already normalizes keywords
-// to a string[]; this stays defensive for direct component usage.
-const keywords = computed<string[]>(() => {
-  const raw = frontmatter.value.keywords
-  if (!raw) return []
-  return Array.isArray(raw) ? raw : String(raw).split(',')
-})
+// Validation in config.mts (transformPageData) already normalizes keywords;
+// this stays defensive for direct component usage.
+const keywords = computed(() => normalizeKeywords(frontmatter.value.keywords))
 
 const dateText = computed(() => {
   const raw = frontmatter.value.date

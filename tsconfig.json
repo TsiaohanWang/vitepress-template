@@ -25,7 +25,7 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
 
-    "types": ["vitepress/client"]
+    "types": ["vitepress/client", "node"]
   },
-  "include": [".vitepress/**/*.ts", "docs/**/*.ts", "*.ts"]
+  "include": [".vitepress/**/*.ts", ".vitepress/**/*.mts", "docs/**/*.ts", "*.ts", "*.mts"]
 }

@@ -1,7 +1,11 @@
 {
   "name": "vitepress-template",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
@@ -15,9 +19,12 @@
     "@iconify-json/tabler": "^1.2.38",
     "@iconify/utils": "^3.1.4",
     "@mdit/plugin-icon": "^1.1.0",
+    "@types/markdown-it": "^14.2.0",
+    "@types/node": "^22",
+    "markdown-it": "^14.1.0",
     "markdown-it-mathjax3": "^4.3.2",
     "typescript": "^7.0.2",
-    "vitepress": "next",
+    "vitepress": "2.0.0-alpha.19",
     "vue": "^3.5.13"
   }
 }

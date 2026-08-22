@@ -3,7 +3,9 @@ import { defineConfig } from 'vitepress'
 import type { DefaultTheme } from 'vitepress'
 import navJson from '../nav.json'
 import sidebarJson from '../sidebar.json'
+import { normalizeKeywords } from './frontmatter'
 import { inlineSvgRender } from './iconify'
+import { mustacheGuard } from './markdown-guards'
 
 const nav = navJson as DefaultTheme.NavItem[]
 const sidebar = sidebarJson as Record<string, DefaultTheme.SidebarItem[]>
@@ -50,6 +52,9 @@ export default defineConfig({
     // Rendered to inline SVG at build time (SSR-friendly).
     config: (md) => {
       md.use(icon, { render: inlineSvgRender })
+
+      // See markdown-guards.ts for details.
+      md.use(mustacheGuard)
     },
   },
 
@@ -63,11 +68,7 @@ export default defineConfig({
     const problems: string[] = []
     if (!fm.title) problems.push('"title" is required')
 
-    const keywords = Array.isArray(fm.keywords)
-      ? fm.keywords
-      : typeof fm.keywords === 'string' && fm.keywords.trim() !== ''
-        ? fm.keywords.split(',').map((part) => part.trim()).filter(Boolean)
-        : []
+    const keywords = normalizeKeywords(fm.keywords)
     if (keywords.length === 0) {
       problems.push('"keywords" is required (array or comma-separated)')
     } else {
