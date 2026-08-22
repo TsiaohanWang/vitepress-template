@@ -1,3 +1,5 @@
+import '@fontsource/jetbrains-mono/400.css'
+import '@fontsource/jetbrains-mono/700.css'
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 // Keep this import LAST so custom.css can win equal-specificity ties

@@ -9,7 +9,8 @@
 - **导航/侧边栏 JSON 化**：`nav.json` / `sidebar.json` 放在根目录，改菜单不用碰 TS
 - **数学公式**：官方 `markdown.math` 方案（markdown-it-mathjax3），构建时渲染为静态 HTML
 - **Iconify 图标**：emoji 风格语法 `::set:name::`，构建时内联 SVG，无运行时 API 请求
-- **自定义容器与主题色**：10 种主题化容器（内置 5 种 + 扩展 5 种），Obsidian 风格配色与 gravity-ui 标题图标；行内代码颜色跟随正文
+- **自定义容器与主题色**：10 种主题化容器（内置 5 种 + 扩展 5 种），Obsidian 风格配色与 gravity-ui 标题图标；行内代码与链接颜色跟随正文
+- **等宽字体**：自托管 JetBrains Mono（Fontsource 打包），覆盖代码块/行内代码/kbd，离线可用
 - **SSR 保证**：公式与图标均在 Markdown 编译阶段输出为静态 HTML，页面无客户端数学/图标 JS
 
 ## 环境要求
@@ -36,7 +37,7 @@ pnpm docs:preview   # 预览构建产物 http://localhost:4173
 │  ├─ config.mts          # 站点配置入口（srcDir 指向 docs/）
 │  ├─ iconify.ts          # 图标构建时渲染器（::set:name:: → 内联 SVG）
 │  ├─ theme/
-│  │  ├─ index.ts         # 主题入口，继承默认主题并引入 custom.css
+│  │  ├─ index.ts         # 主题入口：引入 JetBrains Mono 字重与 custom.css
 │  │  └─ custom.css       # 自定义容器配色与标题图标（Obsidian 风格）
 │  ├─ cache/              # 开发缓存（已 gitignore）
 │  └─ dist/               # 构建产物（已 gitignore）
@@ -111,12 +112,16 @@ JSON 无法携带类型，`config.mts` 中已做类型断言（`nav as DefaultTh
 
 ### 主题扩展（`.vitepress/theme/index.ts` + `custom.css`）
 
-默认继承官方主题，并已引入 `custom.css`（自定义容器的配色与标题图标）。可继续在此注册全局组件、追加样式、覆写布局插槽：
+默认继承官方主题，并已引入 JetBrains Mono 字重与 `custom.css`（自定义容器的配色与标题图标）。可继续在此注册全局组件、追加样式、覆写布局插槽：
 
 ```ts
-import './custom.css'            // 自定义容器配色与标题图标（模板自带）
+import '@fontsource/jetbrains-mono/400.css'
+import '@fontsource/jetbrains-mono/700.css'
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
+// Keep this import LAST so custom.css can win equal-specificity ties
+// against the default theme's styles.
+import './custom.css'
 
 export default {
   extends: DefaultTheme,
@@ -127,7 +132,7 @@ export default {
 } satisfies Theme
 ```
 
-`custom.css` 与 `index.ts` 同目录，用于覆写默认主题变量或微调排版；删除其中的容器样式段即可恢复 VitePress 默认容器外观。
+注意保持 `./custom.css` 位于导入序列最后：它与部分官方规则同优先级，靠打包顺序取胜。`custom.css` 与 `index.ts` 同目录，用于覆写默认主题变量或微调排版；删除其中的容器样式段即可恢复 VitePress 默认容器外观。
 
 ### 静态资源与社交链接
 
@@ -236,11 +241,19 @@ Bug 容器。
 
 说明：
 - 主题色同时作用于容器背景（7% 不透明度）、边框（35%）与标题文字；正文保持常规文字色
-- 行内代码字体颜色跟随所处正文颜色（全站生效，容器内亦然），仅保留代码底色以作区分
+- 行内代码与链接的字体颜色跟随所处正文颜色（全站生效，容器内亦然）；行内代码保留底色、链接保留下划线与 hover 反馈以作区分
 - 标题图标以 CSS mask 方式内嵌（gravity-ui SVG data URI），纯静态资源、SSR 友好，颜色自动跟随标题色
 - 暗色模式下强调色自动调亮以保证对比度
 - GFM Alert 与同名容器共享样式：`> [!NOTE]` 即蓝色 note 效果；VitePress 原生支持 `> [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION]`
 - 新增类型两步：在 `config.mts` 的 `markdown.container.customContainers` 注册，并在 `theme/custom.css` 补充该类型的 `--cb-rgb` 与 `--cb-icon`
+
+### 等宽字体（JetBrains Mono）
+
+代码块、行内代码、`kbd`、行号的等宽字体已默认切换为自托管的 JetBrains Mono：
+
+- 字体文件来自 `@fontsource/jetbrains-mono`（400/700 字重），在 `theme/index.ts` 中引入；构建时 woff2 被打包为带哈希的本地静态资源，运行时零第三方请求，SSR/离线友好
+- `font-display: swap` 保证文字先用系统回退栈即时渲染，不阻塞首屏
+- 回退栈与全局切换点在 `theme/custom.css` 的 `--vp-font-family-mono` 变量；更换其他字体只需安装对应 Fontsource 包、替换引入并修改变量
 
 ## 类型检查
 

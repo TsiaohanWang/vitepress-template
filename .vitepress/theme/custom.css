@@ -88,8 +88,32 @@
    is kept so code stays visually distinct). */
 :root {
   --vp-code-color: var(--vp-c-text-1);
+  --vp-code-link-color: inherit;
+  --vp-code-link-hover-color: inherit;
 }
 
 .vp-doc .custom-block code {
   color: inherit;
+}
+
+/* Links follow the surrounding text color too; the underline stays as the
+   clickable affordance. Container-specific accent rules are overridden by
+   equal-specificity rules placed later in the bundle. */
+.vp-doc a {
+  color: inherit;
+}
+
+.vp-doc .custom-block a,
+.vp-doc .custom-block a:hover,
+.vp-doc .custom-block a:hover > code {
+  color: inherit;
+}
+
+/* Code typeface: self-hosted JetBrains Mono. The woff2 files are bundled
+   by Vite into hashed assets at build time (SSR-safe: no runtime requests,
+   no client JS); font-display: swap renders text with the fallback stack
+   immediately, so first paint is never blocked. */
+:root {
+  --vp-font-family-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code',
+    Menlo, Consolas, 'Liberation Mono', monospace;
 }
