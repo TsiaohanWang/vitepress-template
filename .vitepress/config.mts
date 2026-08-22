@@ -46,9 +46,6 @@ export default defineConfig({
       },
     },
 
-    // Disable the "#" hover permalink on headings.
-    anchor: false,
-
     // Emoji-like inline icons: `::set:name::`, `=size`, `/color`.
     // Rendered to inline SVG at build time (SSR-friendly).
     config: (md) => {
@@ -87,6 +84,11 @@ export default defineConfig({
     logo: { src: '/favicon.svg', alt: 'My Awesome Project' },
     nav,
     sidebar,
+
+    // Chinese UI strings for the default theme chrome.
+    // Outline levels stay at the default (h2-h3).
+    outline: { label: '本页内容', level: [2, 3] },
+    docFooter: { prev: '上一页', next: '下一页' },
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/vuejs/vitepress' },

@@ -115,6 +115,12 @@
   padding-top: 0;
 }
 
+/* Hide the "#" hover permalink on headings (the plugin itself must stay
+   enabled: it provides the heading ids the right-side outline needs). */
+.vp-doc .header-anchor {
+  display: none;
+}
+
 /* Code typeface: self-hosted JetBrains Mono. The woff2 files are bundled
    by Vite into hashed assets at build time (SSR-safe: no runtime requests,
    no client JS); font-display: swap renders text with the fallback stack
