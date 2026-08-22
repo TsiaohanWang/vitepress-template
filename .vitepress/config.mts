@@ -30,15 +30,24 @@ export default defineConfig({
 
     // Extra custom containers, styled in theme/custom.css
     // (Obsidian-inspired accent colors + title icons).
+    // Default titles are unified to ALL CAPS across every type.
     container: {
+      infoLabel: 'INFO',
+      tipLabel: 'TIP',
+      warningLabel: 'WARNING',
+      dangerLabel: 'DANGER',
+      detailsLabel: 'DETAILS',
       customContainers: {
-        note: 'Note',
-        question: 'Question',
-        example: 'Example',
-        abstract: 'Abstract',
-        bug: 'Bug',
+        note: 'NOTE',
+        question: 'QUESTION',
+        example: 'EXAMPLE',
+        abstract: 'ABSTRACT',
+        bug: 'BUG',
       },
     },
+
+    // Disable the "#" hover permalink on headings.
+    anchor: false,
 
     // Emoji-like inline icons: `::set:name::`, `=size`, `/color`.
     // Rendered to inline SVG at build time (SSR-friendly).
