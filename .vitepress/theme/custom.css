@@ -141,3 +141,32 @@ html:not(.dark) {
   --vp-c-brand-3: #f74c00;
   --vp-c-brand-soft: rgba(247, 76, 0, 0.16);
 }
+
+/* Inline code background follows the container accent (consistent with
+   its background/border/title), overriding the theme's fixed per-type
+   palettes and the global gray fallback for our extended types. */
+.vp-doc .custom-block.info :not(pre)>code,
+.vp-doc .custom-block.note :not(pre)>code,
+.vp-doc .custom-block.tip :not(pre)>code,
+.vp-doc .custom-block.abstract :not(pre)>code,
+.vp-doc .custom-block.question :not(pre)>code,
+.vp-doc .custom-block.example :not(pre)>code,
+.vp-doc .custom-block.warning :not(pre)>code,
+.vp-doc .custom-block.danger :not(pre)>code,
+.vp-doc .custom-block.bug :not(pre)>code,
+.vp-doc .custom-block.details :not(pre)>code {
+  background-color: rgb(var(--cb-rgb) / 0.1);
+}
+
+.dark .vp-doc .custom-block.info :not(pre)>code,
+.dark .vp-doc .custom-block.note :not(pre)>code,
+.dark .vp-doc .custom-block.tip :not(pre)>code,
+.dark .vp-doc .custom-block.abstract :not(pre)>code,
+.dark .vp-doc .custom-block.question :not(pre)>code,
+.dark .vp-doc .custom-block.example :not(pre)>code,
+.dark .vp-doc .custom-block.warning :not(pre)>code,
+.dark .vp-doc .custom-block.danger :not(pre)>code,
+.dark .vp-doc .custom-block.bug :not(pre)>code,
+.dark .vp-doc .custom-block.details :not(pre)>code {
+  background-color: rgb(var(--cb-rgb) / 0.16);
+}
