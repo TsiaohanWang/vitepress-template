@@ -19,6 +19,10 @@ export default defineConfig({
   description: 'A VitePress Site',
   cleanUrls: true,
 
+  head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+  ],
+
   markdown: {
     // Requires the `markdown-it-mathjax3` peer dependency.
     // https://vitepress.dev/guide/markdown#math-equations
@@ -71,6 +75,7 @@ export default defineConfig({
 
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
+    logo: { src: '/favicon.svg', alt: 'My Awesome Project' },
     nav,
     sidebar,
 

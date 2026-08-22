@@ -148,7 +148,8 @@ export default {
 
 ### 静态资源与社交链接
 
-- **静态资源**：默认公共目录为 `docs/public/`（VitePress 以 `srcDir` 为基准，即 `docs/public`），其中的文件会原样拷贝到产物根目录；站点图标 `favicon.ico` / `favicon.svg` 放到此处即被自动引用。如需改到 `.vitepress/public` 等其他位置，在 `config.mts` 中设置 `vite.publicDir`。
+- **静态资源**：默认公共目录为 `docs/public/`（VitePress 以 `srcDir` 为基准，即 `docs/public`），其中的文件会原样拷贝到产物根目录。模板自带 `docs/public/favicon.svg`（VitePress 渐变底标），并在 `config.mts` 的 `head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }]]` 中引用；替换该文件即可更换站点图标，如需兼容旧浏览器可另行添加 `.ico` / `.png` 并在 `head` 中补充对应 `link`。如需把公共目录改到 `.vitepress/public` 等其他位置，设置 `vite.publicDir` 即可。
+- **站点 Logo（左上角）**：`themeConfig.logo` 已复用 `/favicon.svg`，与标签页图标保持一致；更换图标时两处同步修改。支持 `{ light, dark }` 为明暗主题指定不同图片。
 - **社交链接**：在 `config.mts` 的 `themeConfig.socialLinks` 中配置，如已默认的 GitHub 链接；支持 `github`、`x`、`discord` 等图标，或 `icon: '...'` 自定义。
 
 ### 新增一个导航区块（端到端）
@@ -295,6 +296,28 @@ keywords:
 - 校验在 `config.mts` 的 `transformPageData` 中执行：非首页内容页缺失 `title` 或 `keywords` 时**构建直接失败**，错误信息指明文件与缺失字段
 - `layout: home` 的首页不受校验约束
 - 作者/日期/标签自带 gravity-ui 图标（CSS mask，SSR 友好）；样式位于组件的 scoped style
+
+### 站点品牌色
+
+站点品牌色为 **#F74C00**（橙红），作用于链接 hover、按钮、侧边栏/导航高亮、hero 按钮等全部品牌色场景。明暗两套定义在 `theme/custom.css`：
+
+```css
+html:not(.dark) {
+  --vp-c-brand-1: #f74c00;   /* 主强调色 */
+  --vp-c-brand-2: #ff7a3d;   /* hover 提亮 */
+  --vp-c-brand-3: #d63e00;   /* 实心按钮底色 */
+  --vp-c-brand-soft: rgba(247, 76, 0, 0.14);
+}
+
+.dark {
+  --vp-c-brand-1: #ff8a52;   /* 暗底提亮，保证对比度 */
+  --vp-c-brand-2: #ffa475;
+  --vp-c-brand-3: #f74c00;
+  --vp-c-brand-soft: rgba(247, 76, 0, 0.16);
+}
+```
+
+更换品牌色时同步修改两个块即可；`--vp-c-brand-1/2/3` 分别对应常规/hover/实心三态。
 
 ## 类型检查
 
