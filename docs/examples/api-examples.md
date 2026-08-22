@@ -1,4 +1,9 @@
-# Runtime API Examples
+---
+title: Runtime API Examples
+keywords:
+  - Runtime API
+  - VitePress
+---
 
 This page demonstrates the runtime APIs provided by VitePress.
 

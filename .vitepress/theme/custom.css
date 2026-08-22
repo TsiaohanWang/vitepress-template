@@ -109,6 +109,12 @@
   color: inherit;
 }
 
+/* Headings carry no automatic divider line above them. */
+.vp-doc h2 {
+  border-top: none;
+  padding-top: 0;
+}
+
 /* Code typeface: self-hosted JetBrains Mono. The woff2 files are bundled
    by Vite into hashed assets at build time (SSR-safe: no runtime requests,
    no client JS); font-display: swap renders text with the fallback stack

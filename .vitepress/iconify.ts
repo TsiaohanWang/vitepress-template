@@ -1,6 +1,7 @@
 import { icons as simpleIcons } from '@iconify-json/simple-icons'
 import { icons as tabler } from '@iconify-json/tabler'
 import { icons as gravityUi } from '@iconify-json/gravity-ui'
+import { icons as circleFlags } from '@iconify-json/circle-flags'
 import type { IconifyJSON } from '@iconify-json/simple-icons'
 import { getIconData, iconToHTML, iconToSVG, replaceIDs } from '@iconify/utils'
 
@@ -10,6 +11,7 @@ const collections: Record<string, IconifyJSON> = {
   'simple-icons': simpleIcons,
   tabler,
   'gravity-ui': gravityUi,
+  'circle-flags': circleFlags,
 }
 
 // Build-time renderer for @mdit/plugin-icon: emits inline SVG so icons

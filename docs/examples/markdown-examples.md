@@ -1,4 +1,11 @@
-# Markdown Extension Examples
+---
+title: Markdown Extension Examples
+subtitle: Built-in markdown extensions, plus template extras
+keywords:
+  - Markdown
+  - Extensions
+  - VitePress
+---
 
 This page demonstrates some of the built-in markdown extensions provided by VitePress.
 

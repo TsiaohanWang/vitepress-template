@@ -36,8 +36,11 @@ pnpm docs:preview   # 预览构建产物 http://localhost:4173
 ├─ .vitepress/            # 配置层（VitePress 专属，不放正文）
 │  ├─ config.mts          # 站点配置入口（srcDir 指向 docs/）
 │  ├─ iconify.ts          # 图标构建时渲染器（::set:name:: → 内联 SVG）
+│  ├─ env.d.ts            # .vue 单文件组件类型垫片
 │  ├─ theme/
-│  │  ├─ index.ts         # 主题入口：引入 JetBrains Mono 字重与 custom.css
+│  │  ├─ index.ts         # 主题入口：JetBrains Mono 字重 + DocHeader 插槽 + custom.css
+│  │  ├─ components/
+│  │  │  └─ DocHeader.vue # frontmatter 驱动的文章头部组件（标题/作者/日期/标签）
 │  │  └─ custom.css       # 自定义容器配色与标题图标（Obsidian 风格）
 │  ├─ cache/              # 开发缓存（已 gitignore）
 │  └─ dist/               # 构建产物（已 gitignore）
@@ -112,19 +115,28 @@ JSON 无法携带类型，`config.mts` 中已做类型断言（`nav as DefaultTh
 
 ### 主题扩展（`.vitepress/theme/index.ts` + `custom.css`）
 
-默认继承官方主题，并已引入 JetBrains Mono 字重与 `custom.css`（自定义容器的配色与标题图标）。可继续在此注册全局组件、追加样式、覆写布局插槽：
+默认继承官方主题，已引入 JetBrains Mono 字重与 `custom.css`，并通过 `doc-before` 插槽挂载 `DocHeader` 文章头部组件。可继续在此注册全局组件、追加样式、覆写其他插槽：
 
 ```ts
 import '@fontsource/jetbrains-mono/400.css'
 import '@fontsource/jetbrains-mono/700.css'
+import { h } from 'vue'
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
+import DocHeader from './components/DocHeader.vue'
 // Keep this import LAST so custom.css can win equal-specificity ties
 // against the default theme's styles.
 import './custom.css'
 
 export default {
   extends: DefaultTheme,
+
+  Layout() {
+    return h(DefaultTheme.Layout, null, {
+      // Frontmatter-driven header above the document content (SSR-rendered).
+      'doc-before': () => h(DocHeader),
+    })
+  },
 
   enhanceApp() {
     // Extend the default theme here, e.g. register global components.
@@ -179,13 +191,13 @@ export default {
 
 实现位于 `.vitepress/iconify.ts`：构建时查本地图标数据生成内联 SVG（含 `display:inline-block` 与基线对齐修正，规避 VitePress 全局 `svg{display:block}` 重置导致的独占一行问题）。
 
-> **优先使用单色图标**：图标默认继承当前文字颜色（`currentColor`），会随明暗主题自动切换。彩色/双色图标一旦用 `/color` 硬编码颜色，在 light/dark 切换下观感往往不佳。故推荐 `simple-icons`、`tabler`、`gravity-ui`、`mdi` 等单色图标集，并避免在演示中滥用颜色修饰符。`/color` 仅用于刻意定制品牌色。
+> **优先使用单色图标**：图标默认继承当前文字颜色（`currentColor`），会随明暗主题自动切换。彩色/双色图标一旦用 `/color` 硬编码颜色，在 light/dark 切换下观感往往不佳。故推荐 `simple-icons`、`tabler`、`gravity-ui`、`mdi` 等单色图标集，并避免在演示中滥用颜色修饰符。`/color` 仅用于刻意定制品牌色；`circle-flags` 国旗集是合理例外——国旗本身即为彩色且不随主题变化。
 
 ```md
 ::simple-icons:github =24 /#181717::   # 不推荐：固定色，不随主题变化
 ```
 
-**当前内置 `simple-icons`、`tabler`、`gravity-ui` 三个图标集**（`iconify.ts` 的 `collections` 已注册），前缀分别为 `simple-icons:`、`tabler:`、`gravity-ui:`，例如 `::simple-icons:vuedotjs::`、`::tabler:home::`、`::gravity-ui:house::`。如需更多集，按如下方式扩展：
+**当前内置 `simple-icons`、`tabler`、`gravity-ui`、`circle-flags` 四个图标集**（`iconify.ts` 的 `collections` 已注册），前缀分别为 `simple-icons:`、`tabler:`、`gravity-ui:`、`circle-flags:`，例如 `::simple-icons:vuedotjs::`、`::tabler:home::`、`::gravity-ui:house::`、`::circle-flags:cn::`。如需更多集，按如下方式扩展：
 
 ```sh
 pnpm add -D @iconify-json/mdi      # 1. 安装数据包
@@ -199,6 +211,7 @@ const collections = {
   'simple-icons': simpleIcons,
   tabler,
   'gravity-ui': gravityUi,
+  'circle-flags': circleFlags,
   mdi,
 }
 ```
@@ -254,6 +267,34 @@ Bug 容器。
 - 字体文件来自 `@fontsource/jetbrains-mono`（400/700 字重），在 `theme/index.ts` 中引入；构建时 woff2 被打包为带哈希的本地静态资源，运行时零第三方请求，SSR/离线友好
 - `font-display: swap` 保证文字先用系统回退栈即时渲染，不阻塞首屏
 - 回退栈与全局切换点在 `theme/custom.css` 的 `--vp-font-family-mono` 变量；更换其他字体只需安装对应 Fontsource 包、替换引入并修改变量
+
+### 文章元数据（frontmatter）
+
+内容页通过 frontmatter 声明文章信息，`DocHeader` 组件自动渲染在正文头部（`doc-before` 插槽，构建时 SSR 输出）：
+
+| 字段 | 必填 | 说明 |
+|---|---|---|
+| title | ✅ | 主标题；同时作为浏览器标签页标题 |
+| subtitle | – | 副标题 |
+| author | – | 作者 |
+| date | – | 日期，展示为 YYYY-MM-DD |
+| keywords | ✅ | 关键词标签；数组或逗号分隔字符串均可（构建时归一化为数组） |
+
+```md
+---
+title: 模板使用指南
+subtitle: 配置与内容分离的 VitePress 文档模板
+author: TsiaohanWang
+date: 2026-08-22
+keywords:
+  - VitePress
+  - 模板
+---
+```
+
+- 校验在 `config.mts` 的 `transformPageData` 中执行：非首页内容页缺失 `title` 或 `keywords` 时**构建直接失败**，错误信息指明文件与缺失字段
+- `layout: home` 的首页不受校验约束
+- 作者/日期/标签自带 gravity-ui 图标（CSS mask，SSR 友好）；样式位于组件的 scoped style
 
 ## 类型检查
 

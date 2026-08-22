@@ -43,6 +43,32 @@ export default defineConfig({
     },
   },
 
+  // Enforce required frontmatter on content pages (everything except the
+  // home layout): "title" and "keywords". Keywords are normalized to a
+  // string[] so DocHeader always receives an array.
+  transformPageData(pageData) {
+    const fm = pageData.frontmatter
+    if (fm.layout === 'home') return
+
+    const problems: string[] = []
+    if (!fm.title) problems.push('"title" is required')
+
+    const keywords = Array.isArray(fm.keywords)
+      ? fm.keywords
+      : typeof fm.keywords === 'string' && fm.keywords.trim() !== ''
+        ? fm.keywords.split(',').map((part) => part.trim()).filter(Boolean)
+        : []
+    if (keywords.length === 0) {
+      problems.push('"keywords" is required (array or comma-separated)')
+    } else {
+      fm.keywords = keywords
+    }
+
+    if (problems.length > 0) {
+      throw new Error(`[frontmatter] ${pageData.relativePath}: ${problems.join('; ')}`)
+    }
+  },
+
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav,

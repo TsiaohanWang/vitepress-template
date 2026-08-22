@@ -1,4 +1,13 @@
-# 模板使用指南
+---
+title: 模板使用指南
+subtitle: 配置与内容分离的 VitePress 文档模板
+author: TsiaohanWang
+date: 2026-08-22
+keywords:
+  - VitePress
+  - 模板
+  - 指南
+---
 
 本页是模板的“自述”演示：下面用模板内置的能力直接展示效果，帮助你快速理解用途。
 
@@ -28,6 +37,8 @@ $$ x = {-b \pm \sqrt{b^2 - 4ac} \over 2a} $$
 同时内置 `tabler` 图标集（线性单色风格），前缀 `tabler:`： ::tabler:home:: ::tabler:star:: ::tabler:heart:: 。
 
 以及 `gravity-ui` 图标集（Gravity UI 设计系统），前缀 `gravity-ui:`： ::gravity-ui:house:: ::gravity-ui:star:: ::gravity-ui:heart:: 。
+
+还有 `circle-flags` 圆形国旗集，以国家代码命名，前缀 `circle-flags:`： ::circle-flags:cn:: 中国、::circle-flags:us:: 美国、::circle-flags:jp:: 日本。国旗本身即为彩色，是单色约定的合理例外。
 
 ::: warning 优先使用单色图标
 尽量选用单色图标集（如 `simple-icons`、`tabler`、`mdi`）。彩色/双色图标若硬编码颜色，在明暗主题切换时观感可能不佳；除非刻意定制品牌色，否则不要使用 `/color` 修饰符。
