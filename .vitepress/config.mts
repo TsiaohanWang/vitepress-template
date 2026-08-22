@@ -1,11 +1,11 @@
 import { icon } from '@mdit/plugin-icon'
 import { defineConfig } from 'vitepress'
 import type { DefaultTheme } from 'vitepress'
-import navJson from '../nav.json'
-import sidebarJson from '../sidebar.json'
-import { normalizeKeywords } from './frontmatter'
-import { inlineSvgRender } from './iconify'
-import { mustacheGuard } from './markdown-guards'
+import navJson from '../nav.json' with { type: 'json' }
+import sidebarJson from '../sidebar.json' with { type: 'json' }
+import { normalizeKeywords } from './frontmatter.ts'
+import { inlineSvgRender } from './iconify.ts'
+import { mustacheGuard } from './markdown-guards.ts'
 
 const nav = navJson as DefaultTheme.NavItem[]
 const sidebar = sidebarJson as Record<string, DefaultTheme.SidebarItem[]>

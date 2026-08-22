@@ -195,7 +195,7 @@ pnpm exec tsc --noEmit
 
 覆盖 `.vitepress/**/*.ts`、`.vitepress/config.mts` 与根目录 `.ts`/`.mts`；JSON 导入依赖 tsconfig 的 `resolveJsonModule`。
 
-> 构建时可能出现 `import "./iconify" without a file extension` 与 `JSON import "../nav.json" without import attributes` 提示，这是 Vite 8 原生配置加载器的兼容提示，不影响功能，可忽略。
+> `config.mts` 中的相对导入均带 `.ts` 扩展名（配合 tsconfig 的 `allowImportingTsExtensions`），JSON 导入使用 `with { type: 'json' }` 属性——这是 Vite 8 原生配置加载器的要求，可保证构建输出零警告。
 
 ## 部署
 
