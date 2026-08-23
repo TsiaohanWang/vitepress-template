@@ -1,8 +1,4 @@
-# pnpm settings (pnpm >= 10 reads these from this file, not package.json).
-# @mdit/plugin-icon / @mdit/helper declare markdown-it ^15 as their peer,
-# but they only use APIs that are identical in markdown-it 14 -- the
-# version VitePress itself uses and the one this repo aligns on.
+# test
 peerDependencyRules:
   allowedVersions:
-    "@mdit/plugin-icon>markdown-it": 14
-    "@mdit/helper>markdown-it": 14
+    markdown-it: "14"

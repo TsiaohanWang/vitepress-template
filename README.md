@@ -11,6 +11,7 @@
 - **Iconify 图标**：emoji 风格语法 `::set:name::`，构建时内联 SVG，无运行时 API 请求
 - **自定义容器与主题色**：10 种主题化容器（内置 5 种 + 扩展 5 种），Obsidian 风格配色与 gravity-ui 标题图标；行内代码与链接颜色跟随正文
 - **等宽字体**：自托管 JetBrains Mono（Fontsource 打包），覆盖代码块/行内代码/kbd，离线可用
+- **Typst 图表**：```` ```typst ```` 围栏构建期编译为内联 SVG，CeTZ / Alchemist / Lilaq 实测可用；长短围栏区分渲染与源码展示
 - **SSR 保证**：公式与图标均在 Markdown 编译阶段输出为静态 HTML，页面无客户端数学/图标 JS
 
 > 各项能力的完整说明、示例与排错表见站点内的 [内置增强与排错](/guide/enhancements) 页面。
@@ -39,6 +40,7 @@ pnpm docs:preview   # 预览构建产物 http://localhost:4173
 │  ├─ config.mts          # 站点配置入口（srcDir 指向 docs/）
 │  ├─ frontmatter.ts      # keywords 归一化（构建校验与组件共用）
 │  ├─ iconify.ts          # 图标构建时渲染器（::set:name:: → 内联 SVG）
+│  ├─ typst.ts            # ```typst 围栏构建期渲染器（typst.ts → 内联 SVG）
 │  ├─ markdown-guards.ts  # 花括号安全防护插件（正文 {{ }} 自动转义）
 │  ├─ env.d.ts            # .vue 单文件组件类型垫片
 │  ├─ theme/
@@ -56,7 +58,8 @@ pnpm docs:preview   # 预览构建产物 http://localhost:4173
 │  │  └─ enhancements.md  # 内置增强与排错（站内指南页）
 │  └─ examples/           # Examples section，对应 /examples/...
 │     ├─ markdown-examples.md
-│     └─ api-examples.md
+│     ├─ api-examples.md
+│     └─ typst-diagrams.md
 ├─ nav.json               # 顶部导航配置
 ├─ sidebar.json           # 侧边栏配置
 ├─ package.json           # ESM（type: module）+ docs:* 脚本 + engines/packageManager
@@ -182,6 +185,7 @@ export default {
 | 自定义容器 | 10 种 Obsidian 风格主题色容器 + gravity-ui 标题图标 |
 | 等宽字体 | 自托管 JetBrains Mono，离线可用 |
 | 文章元数据 | frontmatter 驱动 DocHeader，title/keywords 构建期强校验 |
+| Typst 图表 | ```typst 围栏构建期编译为内联 SVG（CeTZ / Alchemist / Lilaq 实测可用） |
 | 品牌色 | #F74C00 明暗双套变量 |
 | 花括号防护 | 正文 `{{ }}` 自动转义，杜绝 Vue 插值误伤 |
 

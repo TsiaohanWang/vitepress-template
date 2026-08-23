@@ -86,6 +86,12 @@
   padding-top: 0;
 }
 
+/* Tables shrink to content width and sit centered horizontally
+   (wide tables still scroll horizontally via the theme's overflow rule). */
+.vp-doc table {
+  margin-inline: auto;
+}
+
 /* Hide the "#" hover permalink on headings (the plugin itself must stay
    enabled: it provides the heading ids the right-side outline needs). */
 .vp-doc .header-anchor {
@@ -135,4 +141,28 @@ html:not(.dark) {
 
 .dark .vp-doc .custom-block :not(pre)>code {
   background-color: rgb(var(--cb-rgb) / 0.16);
+}
+
+/* Typst figures rendered at build time (inline SVG, SSR-safe). */
+.typst-figure {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.typst-figure svg {
+  max-width: 100%;
+  height: auto;
+  /* The global reset makes svg display:block, so center it via margins
+     instead of relying on the figure's text-align. */
+  margin-inline: auto;
+}
+
+.typst-figure-error {
+  color: var(--vp-c-danger-1);
+  font-size: 13px;
+}
+
+/* Typst examples: highlighted source paired with the rendered figure. */
+.typst-example {
+  margin: 16px 0;
 }

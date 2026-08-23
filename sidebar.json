@@ -5,6 +5,7 @@
   ],
   "/examples/": [
     { "text": "Markdown Examples", "link": "/examples/markdown-examples" },
-    { "text": "Runtime API Examples", "link": "/examples/api-examples" }
+    { "text": "Runtime API Examples", "link": "/examples/api-examples" },
+    { "text": "Typst 图表示例", "link": "/examples/typst-diagrams" }
   ]
 }

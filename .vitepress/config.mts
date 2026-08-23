@@ -6,6 +6,7 @@ import sidebarJson from '../sidebar.json' with { type: 'json' }
 import { normalizeKeywords } from './frontmatter.ts'
 import { inlineSvgRender } from './iconify.ts'
 import { mustacheGuard } from './markdown-guards.ts'
+import { typstFencePlugin } from './typst.ts'
 
 const nav = navJson as DefaultTheme.NavItem[]
 const sidebar = sidebarJson as Record<string, DefaultTheme.SidebarItem[]>
@@ -59,6 +60,9 @@ export default defineConfig({
 
       // See markdown-guards.ts for details.
       md.use(mustacheGuard)
+
+      // Compile ```typst fences to inline SVG at build time (typst.ts).
+      md.use(typstFencePlugin)
     },
   },
 
