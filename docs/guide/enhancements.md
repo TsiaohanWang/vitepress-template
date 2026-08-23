@@ -18,7 +18,13 @@ keywords:
 块级：$$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
 ```
 
-公式在构建时由 MathJax 渲染为静态 `<mjx-container>`，无需客户端运行时。
+**显示效果**
+
+行内：$a \ne 0$；块级：
+
+$$ \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi} $$
+
+构建时由 MathJax 渲染为静态 `<mjx-container>`，无需客户端运行时。
 
 ## Iconify 图标
 
@@ -28,6 +34,10 @@ keywords:
 默认尺寸（1em，随字号缩放）：::simple-icons:vuedotjs::
 仅指定尺寸（仍单色）：::simple-icons:github =24::
 ```
+
+**显示效果**
+
+默认尺寸：::simple-icons:vuedotjs::；仅指定尺寸：::simple-icons:github =24::
 
 > 采用双冒号 `::name::` 而非单冒号，是为了与 VitePress 内置的 emoji 语法 `:tada:` 区分，二者互不冲突、可共存。
 
@@ -96,13 +106,23 @@ const collections = {
 
 ```md
 ::: bug
-Bug 容器。
+Bug 容器（洋红色）。
 :::
 
 ::: question 自定义标题
-标题文字支持自定义。
+Question 容器（金橙色），支持自定义标题。
 :::
 ```
+
+**显示效果**
+
+::: bug
+Bug 容器（洋红色）。
+:::
+
+::: question 自定义标题
+Question 容器（金橙色），支持自定义标题。
+:::
 
 说明：
 - 主题色同时作用于容器背景（7% 不透明度）、边框（35%）与标题文字；正文保持常规文字色

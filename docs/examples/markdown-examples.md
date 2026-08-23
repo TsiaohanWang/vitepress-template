@@ -1,106 +1,156 @@
 ---
-title: Markdown Extension Examples
-subtitle: Built-in markdown extensions, plus template extras
+title: Markdown 扩展示例
+subtitle: 内置扩展与模板增强的「代码 → 显示效果」对照
 keywords:
   - Markdown
-  - Extensions
+  - 扩展
   - VitePress
 ---
 
-This page demonstrates some of the built-in markdown extensions provided by VitePress.
+本页以「代码 → 显示效果」的方式，对照展示 VitePress 内置扩展与模板增强能力。所有效果均由本站实时渲染。
 
-## Syntax Highlighting
+## 自定义容器
 
-VitePress provides Syntax Highlighting powered by [Shiki](https://github.com/shikijs/shiki).
+**输入**
 
-### Output
-
-```js
-export default {
-  name: 'MyComponent',
-  // ...
-}
-```
-
-### Recommended `vite.config.js`
-
-```js
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  // ...
-})
-```
-
-## Custom Containers
-
+````md
 ::: info
-This is an info box.
+这是一个信息容器。
+:::
+
+::: tip
+这是一个提示容器。
 :::
 
 ::: warning
-This is a warning.
+这是一个警告容器。
 :::
 
 ::: danger
-This is a dangerous warning.
+这是一个危险容器。
+:::
+````
+
+**显示效果**
+
+::: info
+这是一个信息容器。
 :::
 
-The template also registers five extra containers, themed in
-`.vitepress/theme/custom.css`:
-
-::: note
-This is a note container (blue).
+::: tip
+这是一个提示容器。
 :::
 
-::: question
-This is a question container (amber).
+::: warning
+这是一个警告容器。
 :::
 
-::: example
-This is an example container (purple).
+::: danger
+这是一个危险容器。
 :::
 
-::: abstract
-This is an abstract container (indigo).
+五种模板扩展容器（NOTE / QUESTION / EXAMPLE / ABSTRACT / BUG）写法完全相同，配色与标题图标不同，详见[内置增强与排错](/guide/enhancements)。
+
+## 折叠容器
+
+**输入**
+
+````md
+::: details 点开查看详情
+折叠内容默认收起，点击标题展开。
+:::
+````
+
+**显示效果**
+
+::: details 点开查看详情
+折叠内容默认收起，点击标题展开。
 :::
 
-::: bug
-This is a bug container (magenta).
-:::
+## GitHub 风格 Alert
 
-::: details
-This is a details block.
-:::
+**输入**
 
-## Math Equations
+````md
+> [!NOTE]
+> 强调用户需要关注的信息。
 
-When $a \ne 0$, there are two solutions to $(ax^2 + bx + c = 0)$ and they are
+> [!CAUTION]
+> 负面潜在后果的警告。
+````
+
+**显示效果**
+
+> [!NOTE]
+> 强调用户需要关注的信息。
+
+> [!CAUTION]
+> 负面潜在后果的警告。
+
+## 数学公式
+
+**输入**
+
+````md
+行内公式 $E = mc^2$，块级公式：
+
+$$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
+````
+
+**显示效果**
+
+行内公式 $E = mc^2$，块级公式：
+
 $$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
 
-**Maxwell's equations:**
+构建时由 MathJax 渲染为静态 HTML，无客户端运行时。
 
-| equation                                                                                                                                                                 | description                                                                            |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| $\nabla \cdot \vec{\mathbf{B}}  = 0$                                                                                                                                     | divergence of $\vec{\mathbf{B}}$ is zero                                               |
-| $\nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t}  = \vec{\mathbf{0}}$                                                          | curl of $\vec{\mathbf{E}}$ is proportional to the rate of change of $\vec{\mathbf{B}}$ |
-| $\nabla \times \vec{\mathbf{B}} -\, \frac1c\, \frac{\partial\vec{\mathbf{E}}}{\partial t} = \frac{4\pi}{c}\vec{\mathbf{j}}    \nabla \cdot \vec{\mathbf{E}} = 4 \pi \rho$ | _wha?_                                                                                 |
+## Iconify 图标
 
-## Icons
+**输入**
 
-Inline icons written as `::set:name::`, rendered to inline SVG at build time:
+````md
+品牌图标：::simple-icons:vuedotjs::
+圆形国旗：::circle-flags:cn::
+指定尺寸：::tabler:home =24::
+````
 
-Made with ::simple-icons:vuedotjs:: Vue and ::simple-icons:typescript:: TypeScript.
+**显示效果**
 
-Size modifier is supported (icons stay single-color and follow the text color,
-adapting to light/dark themes): ::simple-icons:github =24:: ::simple-icons:pnpm =32::
+品牌图标：::simple-icons:vuedotjs::
 
-::: warning Prefer single-color icons
-Colored icons with fixed `/color` don't adapt to light/dark themes. Prefer
-monochrome icon sets (e.g. `simple-icons`, `tabler`, `mdi`) and avoid `/color`
-unless you intentionally brand a specific icon.
-:::
+圆形国旗：::circle-flags:cn::
 
-## More
+指定尺寸：::tabler:home =24::
 
-See [Markdown Extensions](https://vitepress.dev/guide/markdown) for more.
+图标默认随字号缩放、跟随文字颜色；更多图标集与修饰符见[内置增强与排错](/guide/enhancements)。
+
+## 花括号安全防护
+
+**输入**
+
+````md
+正文中的 {{ user.name }} 与行内代码 `{{ x }}` 都会原样显示。
+````
+
+**显示效果**
+
+正文中的 {{ user.name }} 与行内代码 `{{ x }}` 都会原样显示——双花括号被自动转义，不会触发 Vue 编译错误或内容丢失。
+
+## 表格
+
+**输入**
+
+````md
+| 默认对齐 | 左对齐 | 居中 | 右对齐 |
+| --- | :--- | :---: | ---: |
+| 表头默认居中 | 写法决定单元格 | `:---:` | `---:` |
+````
+
+**显示效果**
+
+| 默认对齐 | 左对齐 | 居中 | 右对齐 |
+| --- | :--- | :---: | ---: |
+| 表头默认居中 | 写法决定单元格 | `:---:` | `---:` |
+
+表头未指定对齐时默认居中（模板增强）；列对齐语法对单元格仍然生效。

@@ -1,32 +1,45 @@
 ---
-title: Runtime API Examples
+title: Runtime API 示例
+subtitle: 在正文与主题中使用 VitePress 提供的运行时 API
 keywords:
   - Runtime API
   - VitePress
 ---
 
-This page demonstrates the runtime APIs provided by VitePress.
+本页演示 VitePress 运行时 API 的基本用法。这类 API 主要用于自定义默认主题或开发自定义主题；本站的 DocHeader 文章头部组件正是基于它们实现的。
 
-The main use case of VitePress runtime APIs is customizing
-the default theme or building custom themes.
+## useData()
 
-```ts
+访问站点配置、页面 frontmatter 与主题数据：
+
+**输入**
+
+```vue
+<script setup>
 import { useData } from 'vitepress'
 
-const { theme, page, params } = useData()
+// 本页头部展示的标题与关键词即来自 frontmatter
+const { theme, page, frontmatter } = useData()
+</script>
 ```
 
-## `useData()`
+**说明**
 
-Returns the site, theme, and page data. See
-[`useData`](https://vitepress.dev/reference/runtime-api#usedata) for details.
+- `frontmatter.title` / `keywords` 由本页头部组件（DocHeader）消费
+- `page.headers` 在未启用 `markdown.headers` 时为空数组，属正常现象
 
-## `useRoute()`
+## useRoute()
 
-```ts
+访问当前路由信息：
+
+**输入**
+
+```vue
+<script setup>
 import { useRoute } from 'vitepress'
 
 const route = useRoute()
+</script>
 ```
 
-Returns the current route object.
+详见 [Runtime API Reference](https://vitepress.dev/reference/runtime-api)。
