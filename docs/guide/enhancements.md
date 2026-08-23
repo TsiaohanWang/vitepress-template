@@ -1,13 +1,18 @@
 ---
-title: 内置增强与排错
-subtitle: 模板内置的写作能力与常见构建问题排查
+title: 内置增强
+subtitle: 模板内置的写作能力与站点配置
 keywords:
   - VitePress
   - 增强
-  - 排错
+  - Markdown
 ---
 
-本页汇总模板的全部内置增强能力与对应排错指南。以下示例均由本站实时渲染，所见即所得。
+本页收录模板的日常写作增强：数学公式、图标、容器、字体、元数据、品牌色、搜索与花括号防护。Typst 图表与排错手册已拆分为独立页面：
+
+- [Typst 图表](/guide/typst) —— 围栏编译、包缓存与失败行为
+- [常见问题与排查](/guide/troubleshooting) —— 全部构建错误与异常速查
+
+以下示例均由本站实时渲染，所见即所得。
 
 ## 数学公式
 
@@ -39,9 +44,7 @@ $$ \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi} $$
 
 默认尺寸：::simple-icons:vuedotjs::；仅指定尺寸：::simple-icons:github =24::
 
-> 采用双冒号 `::name::` 而非单冒号，是为了与 VitePress 内置的 emoji 语法 `:tada:` 区分，二者互不冲突、可共存。
-
-实现位于 `.vitepress/iconify.ts`：构建时查本地图标数据生成内联 SVG（含 `display:inline-block` 与基线对齐修正，规避 VitePress 全局 `svg{display:block}` 重置导致的独占一行问题）。
+采用双冒号 `::name::` 而非单冒号，是为了与 VitePress 内置的 emoji 语法 `:tada:` 区分——二者互不冲突、可共存。实现位于 `.vitepress/iconify.ts`：构建时查本地图标数据生成内联 SVG（含 `display:inline-block` 与基线对齐修正，规避 VitePress 全局 `svg{display:block}` 重置导致的独占一行问题）。
 
 > **优先使用单色图标**：图标默认继承当前文字颜色（`currentColor`），会随明暗主题自动切换。彩色/双色图标一旦用 `/color` 硬编码颜色，在 light/dark 切换下观感往往不佳。故推荐 `simple-icons`、`tabler`、`gravity-ui`、`mdi` 等单色图标集，并避免在演示中滥用颜色修饰符。`/color` 仅用于刻意定制品牌色；`circle-flags` 国旗集是合理例外——国旗本身即为彩色且不随主题变化。
 
@@ -78,14 +81,7 @@ const collections = {
 - 颜色须为十六进制或命名色：`/#181717`、`/red`
 - 非法值会在构建日志打印 `[iconify]` 警告并**忽略该修饰符**（图标本体仍渲染），杜绝注入风险
 
-### 排错：图标不显示？
-
-图标语法有误时，构建会在终端打印 `[iconify]` 警告并**丢弃该图标**（不会中断构建）：
-- `unknown icon set or malformed name`：前缀写错，或未使用 `set:name` 全称
-- `icon not found in "..."`：图标名在该集里不存在
-- 若提示 `modifiers like "=24" or "/#fff" must be separate tokens`：修饰符 `=24` / `/#fff` 必须用空格与 `set:name` 隔开，不能写成 `::set:name=24::` 这种粘连写法
-
-需要让坏图标直接中断构建（适合 CI）：设环境变量 `ICONIFY_STRICT=1` 再执行 `pnpm docs:build`。
+图标不显示时的完整排查见 [常见问题与排查](/guide/troubleshooting#图标问题-警告-不中断构建)。
 
 ## 自定义容器与主题色
 
@@ -125,6 +121,7 @@ Question 容器（金橙色），支持自定义标题。
 :::
 
 说明：
+
 - 主题色同时作用于容器背景（7% 不透明度）、边框（35%）与标题文字；正文保持常规文字色
 - 行内代码与链接的字体颜色跟随所处正文颜色（全站生效，容器内亦然）；行内代码保留底色、链接保留下划线与 hover 反馈以作区分
 - 容器内的行内代码底色随容器主题色（明亮 10% / 暗色 16% 不透明度），与容器背景、边框同源；围栏代码块不受影响
@@ -141,7 +138,7 @@ Question 容器（金橙色），支持自定义标题。
 - `font-display: swap` 保证文字先用系统回退栈即时渲染，不阻塞首屏
 - 回退栈与全局切换点在 `theme/custom.css` 的 `--vp-font-family-mono` 变量；更换其他字体只需安装对应 Fontsource 包、替换引入并修改变量
 
-## 文章元数据（frontmatter）
+## 文章元数据
 
 内容页通过 frontmatter 声明文章信息，`DocHeader` 组件自动渲染在正文头部（`doc-before` 插槽，构建时 SSR 输出）：
 
@@ -168,6 +165,16 @@ keywords:
 - 校验在 `config.mts` 的 `transformPageData` 中执行：非首页内容页缺失 `title` 或 `keywords` 时**构建直接失败**，错误信息指明文件与缺失字段；归一化逻辑位于 `.vitepress/frontmatter.ts`，组件与构建校验共用同一实现
 - `layout: home` 的首页不受校验约束
 - 作者/日期/标签自带 `gravity-ui` 图标（CSS mask，SSR 友好）；样式位于组件的 scoped style
+- **写作约定**：正文不要再手写一级标题（`# h1`），页面主标题由 DocHeader 从 frontmatter 渲染，重复会出现两个 h1
+
+组件的数据消费方式详见 [运行时 API 与主题扩展](/examples/api-examples)。
+
+## 本地搜索
+
+本地全文搜索已内置 **CJK 感知分词器**（`.vitepress/config.mts` 的 `search.options.miniSearch.options.tokenize`）：基于 `Intl.Segmenter` 的 word 粒度切词，中文按词典词索引、英文与数字串保持完整——官方默认的空白分词无法命中中文短语内部。
+
+- 同一分词器同时作用于索引构建（Node）与查询（浏览器），函数经 VitePress 序列化下发，必须保持自包含（不可引用外部变量）
+- 中文界面文案已配置；搜索无结果的排查见[常见问题与排查](/guide/troubleshooting#本地搜索无结果)
 
 ## 站点品牌色
 
@@ -191,27 +198,6 @@ html:not(.dark) {
 
 更换品牌色时同步修改两个块即可；`--vp-c-brand-1/2/3` 分别对应常规/hover/实心三态。
 
-## Typst 图表
-
-````md
-```typst
-#import "@preview/cetz:0.3.4"
-#set page(width: auto, height: auto, margin: 6pt)
-#cetz.canvas(length: 2cm, {
-  import cetz.draw: *
-  line((0, 0), (2, 1))
-})
-```
-````
-
-```` ```typst ```` 围栏在构建期经 `@myriaddreamin/typst-ts-node-compiler`（N-API 原生插件，无需 Rust 工具链）编译为**自包含内联 SVG**：字形以路径嵌入、无 `<text>` 元素与外部引用，纯静态 SSR，零客户端 JS。
-
-- **渲染与展示分离**：恰好 3 个反引号的围栏渲染为 SVG；4 个及以上反引号的同名围栏按普通代码块高亮显示源码原文（CommonMark 嵌套约定）——需要同时给出"示例代码 + 渲染效果"时，先写长围栏代码块、再写短围栏渲染块
-- **图表类源码务必设置** `#set page(width: auto, height: auto, margin: ...)`，否则输出整张 A4 页面而非贴合图形
-- `@preview/*` 包（`cetz` / `alchemist` / `lilaq` / `fletcher` / `tiaoma` 等）首次使用时自动下载至 `~/.cache/typst/packages`；CI 需允许该网络访问，或预先缓存
-- 编译失败不中断构建：终端打印诊断，页面原位展示错误占位块；已编译结果按内容哈希缓存在 `.vitepress/cache/typst-svg/`（已 gitignore）
-- 实现见 `.vitepress/typst.ts`；站点示例页 [Typst 图表示例](/examples/typst-diagrams) 含 `cetz`（官方 gallery `karls-picture`）/ `alchemist` / `lilaq` / `fletcher` / `tiaoma` 五例
-
 ## 花括号安全防护
 
 页面会被编译为 Vue 模板：正文里的双花括号要么被当作插值表达式求值（内容**静默丢失**），要么因非法表达式直接**构建失败**。`markdown-guards.ts` 中的 `mustacheGuard` 插件在渲染层把正文文本与行内代码中的 `{{` / `}}` 自动转义为 HTML 实体——浏览器原样显示花括号，Vue 编译器不再匹配插值。
@@ -220,17 +206,4 @@ html:not(.dark) {
 - **不受影响**：围栏代码块（token 类型不同）、原生 HTML/SFC 块（html token 绕过该规则，真实 Vue 插值完整保留）
 - 实现细节见 `.vitepress/markdown-guards.ts` 源码注释
 
-## 排错：特殊字符与常见构建失败
-
-页面会被编译为 Vue 模板，以下写法有明确影响（均已实测）：
-
-| 写法 | 行为 | 解决方案 |
-|---|---|---|
-| 正文 `{{ x }}`、`{{ a b c }}` | ✅ 已内置防护：自动转义为字面量显示，不再崩溃或丢失 | 无需处理；真实 Vue 插值请用原生 HTML/SFC 块 |
-| frontmatter 值含未引号冒号（`title: A: B`） | ❌ YAMLException | 为值加引号：`title: "A: B"` |
-| 内部链接指向不存在的页面 | ❌ dead link 错误 | 修正链接；确需跳过时设置 `ignoreDeadLinks` |
-| 正文裸尖括号标签（`List<string>`、`<tag>`） | ❌ Element is missing end tag | 用反引号包裹为代码：`` `List<string>` `` 或写作 `&lt;string&gt;` |
-| 西文单引号 `'`（含 frontmatter） | ✅ 正常 | 仅当值以引号开头且内部再有引号时需转义 |
-| 图标语法畸形（`::foo:bar::` 等） | ⚠️ 构建警告并丢弃该图标（`ICONIFY_STRICT=1` 时改为构建失败） | 按 `::set:name::` 全称书写 |
-
-图标语法不显示时查看构建日志中的 `[iconify]` 警告定位具体条目。
+更多特殊字符的影响与解法汇总于[常见问题与排查](/guide/troubleshooting#特殊字符速查表)。

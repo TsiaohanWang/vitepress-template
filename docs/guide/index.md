@@ -44,7 +44,7 @@ $$ x = {-b \pm \sqrt{b^2 - 4ac} \over 2a} $$
 尽量选用单色图标集（如 `simple-icons`、`tabler`、`mdi`）。彩色/双色图标若硬编码颜色，在明暗主题切换时观感可能不佳；除非刻意定制品牌色，否则不要使用 `/color` 修饰符。
 :::
 
-新增图标集只需安装对应 `@iconify-json/*` 数据包并在 `.vitepress/iconify.ts` 注册（详见 README）。
+新增图标集只需安装对应 `@iconify-json/*` 数据包并在 `.vitepress/iconify.ts` 注册（详见[内置增强](/guide/enhancements)）。
 
 ## 自定义容器
 
@@ -87,7 +87,7 @@ Details 折叠容器（灰色），标题同样带图标。
 
 ## 下一步
 
-- 修改 `docs/index.md` 替换首页 hero 文案
+- 按[快速开始](/guide/getting-started)发布第一篇文章
 - 编辑 `nav.json` / `sidebar.json` 调整菜单
-- 在 `docs/` 下新增 `.md` 文件即自动生成路由
 - 在 `theme/custom.css` 调整容器配色，或在 `iconify.ts` 接入更多图标集
+- 构建报错时查阅[常见问题与排查](/guide/troubleshooting)

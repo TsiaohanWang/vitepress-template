@@ -49,7 +49,7 @@ keywords:
 这是一个危险容器。
 :::
 
-五种模板扩展容器（NOTE / QUESTION / EXAMPLE / ABSTRACT / BUG）写法完全相同，配色与标题图标不同，详见[内置增强与排错](/guide/enhancements)。
+五种模板扩展容器（NOTE / QUESTION / EXAMPLE / ABSTRACT / BUG）写法完全相同，配色与标题图标不同，详见[内置增强](/guide/enhancements)。
 
 ## 折叠容器
 
@@ -123,7 +123,7 @@ $$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
 
 指定尺寸：::tabler:home =24::
 
-图标默认随字号缩放、跟随文字颜色；更多图标集与修饰符见[内置增强与排错](/guide/enhancements)。
+图标默认随字号缩放、跟随文字颜色；更多图标集与修饰符见[内置增强](/guide/enhancements)，排错见[常见问题与排查](/guide/troubleshooting)。
 
 ## 花括号安全防护
 

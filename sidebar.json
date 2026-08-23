@@ -1,7 +1,10 @@
 {
   "/guide/": [
+    { "text": "快速开始", "link": "/guide/getting-started" },
     { "text": "模板使用指南", "link": "/guide/" },
-    { "text": "内置增强与排错", "link": "/guide/enhancements" }
+    { "text": "内置增强", "link": "/guide/enhancements" },
+    { "text": "Typst 图表", "link": "/guide/typst" },
+    { "text": "常见问题与排查", "link": "/guide/troubleshooting" }
   ],
   "/examples/": [
     { "text": "Markdown Examples", "link": "/examples/markdown-examples" },

@@ -28,5 +28,12 @@
 
     "types": ["vitepress/client", "node"]
   },
-  "include": [".vitepress/**/*.ts", ".vitepress/**/*.mts", "docs/**/*.ts", "*.ts", "*.mts"]
+  "include": [
+    ".vitepress/**/*.ts",
+    ".vitepress/**/*.mts",
+    ".vitepress/**/*.vue",
+    "docs/**/*.ts",
+    "*.ts",
+    "*.mts"
+  ]
 }
