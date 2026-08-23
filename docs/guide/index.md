@@ -48,7 +48,7 @@ $$ x = {-b \pm \sqrt{b^2 - 4ac} \over 2a} $$
 
 ## 自定义容器
 
-在内置 `info / tip / warning / danger / details` 基础上，模板扩展了五种容器，均按 Obsidian 风格配置主题色与 gravity-ui 标题图标：
+在内置 `info / tip / warning / danger / details` 基础上，模板扩展了五种容器，均按 Obsidian 风格配置主题色与 `gravity-ui` 标题图标：
 
 ::: note
 Note 容器（蓝色）。与 GFM Alert `> [!NOTE]` 共享同款样式。

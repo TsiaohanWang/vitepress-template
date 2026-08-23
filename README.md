@@ -7,11 +7,11 @@
 - **配置与内容分离**：所有 VitePress 配置集中在 `.vitepress/`，正文只保留纯 Markdown（`docs/`），互不干扰
 - **TypeScript 全覆盖**：`.mts` 配置 + `.ts` 主题代码 + `tsc --noEmit` 类型检查
 - **导航/侧边栏 JSON 化**：`nav.json` / `sidebar.json` 放在根目录，改菜单不用碰 TS
-- **数学公式**：官方 `markdown.math` 方案（markdown-it-mathjax3），构建时渲染为静态 HTML
+- **数学公式**：官方 `markdown.math` 方案（`markdown-it-mathjax3`），构建时渲染为静态 HTML
 - **Iconify 图标**：emoji 风格语法 `::set:name::`，构建时内联 SVG，无运行时 API 请求
-- **自定义容器与主题色**：10 种主题化容器（内置 5 种 + 扩展 5 种），Obsidian 风格配色与 gravity-ui 标题图标；行内代码与链接颜色跟随正文
+- **自定义容器与主题色**：10 种主题化容器（内置 5 种 + 扩展 5 种），Obsidian 风格配色与 `gravity-ui` 标题图标；行内代码与链接颜色跟随正文
 - **等宽字体**：自托管 JetBrains Mono（Fontsource 打包），覆盖代码块/行内代码/kbd，离线可用
-- **Typst 图表**：```` ```typst ```` 围栏构建期编译为内联 SVG，CeTZ / Alchemist / Lilaq 实测可用；长短围栏区分渲染与源码展示
+- **Typst 图表**：```` ```typst ```` 围栏构建期编译为内联 SVG，`CeTZ` / `Alchemist` / `Lilaq` / `Fletcher` / `Tiaoma` 实测可用；长短围栏区分渲染与源码展示
 - **SSR 保证**：公式与图标均在 Markdown 编译阶段输出为静态 HTML，页面无客户端数学/图标 JS
 
 > 各项能力的完整说明、示例与排错表见站点内的 [内置增强与排错](/guide/enhancements) 页面。
@@ -30,7 +30,7 @@ pnpm docs:build     # 生产构建，输出到 .vitepress/dist
 pnpm docs:preview   # 预览构建产物 http://localhost:4173
 ```
 
-> 注意：`docs:preview` 的静态服务器在启动时缓存 dist 文件清单，**每次重新 build 后需重启 preview**，否则新哈希的 CSS/JS 会 404（表现为“有内容但无样式”）。生产部署到静态托管不受影响。
+> 注意：`docs:preview` 的静态服务器在启动时缓存 `dist` 文件清单，**每次重新 build 后需重启 preview**，否则新哈希的 CSS/JS 会 404（表现为“有内容但无样式”）。生产部署到静态托管不受影响。
 
 ## 目录结构
 
@@ -182,11 +182,11 @@ export default {
 |---|---|
 | 数学公式 | `markdown.math` 构建时渲染，无客户端 JS |
 | Iconify 图标 | `::set:name::` 语法内联 SVG，修饰符白名单校验 |
-| 自定义容器 | 10 种 Obsidian 风格主题色容器 + gravity-ui 标题图标 |
+| 自定义容器 | 10 种 Obsidian 风格主题色容器 + `gravity-ui` 标题图标 |
 | 等宽字体 | 自托管 JetBrains Mono，离线可用 |
-| 文章元数据 | frontmatter 驱动 DocHeader，title/keywords 构建期强校验 |
-| Typst 图表 | ```typst 围栏构建期编译为内联 SVG（CeTZ / Alchemist / Lilaq 实测可用） |
-| 品牌色 | #F74C00 明暗双套变量 |
+| 文章元数据 | frontmatter 驱动 `DocHeader`，`title` / `keywords` 构建期强校验 |
+| Typst 图表 | ```typst 围栏构建期编译为内联 SVG（CeTZ / Alchemist / Lilaq / Fletcher / Tiaoma 实测可用） |
+| 品牌色 | `#F74C00` 明暗双套变量 |
 | 花括号防护 | 正文 `{{ }}` 自动转义，杜绝 Vue 插值误伤 |
 
 详细用法、示例与排错表：[内置增强与排错](/guide/enhancements)。
@@ -197,9 +197,9 @@ export default {
 pnpm exec tsc --noEmit
 ```
 
-覆盖 `.vitepress/**/*.ts`、`.vitepress/config.mts` 与根目录 `.ts`/`.mts`；JSON 导入依赖 tsconfig 的 `resolveJsonModule`。
+覆盖 `.vitepress/**/*.ts`、`.vitepress/config.mts` 与根目录 `.ts`/`.mts`；JSON 导入依赖 `tsconfig.json` 的 `resolveJsonModule`。
 
-> `config.mts` 中的相对导入均带 `.ts` 扩展名（配合 tsconfig 的 `allowImportingTsExtensions`），JSON 导入使用 `with { type: 'json' }` 属性——这是 Vite 8 原生配置加载器的要求，可保证构建输出零警告。
+> `config.mts` 中的相对导入均带 `.ts` 扩展名（配合 `tsconfig.json` 的 `allowImportingTsExtensions`），JSON 导入使用 `with { type: 'json' }` 属性——这是 Vite 8 原生配置加载器的要求，可保证构建输出零警告。
 
 ## 部署
 

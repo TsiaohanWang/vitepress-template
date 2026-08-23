@@ -19,5 +19,9 @@ export const mustacheGuard = (md: MarkdownIt): void => {
     escapeMustaches(tokens[idx]?.content ?? '')
 
   md.renderer.rules.text = guard
-  md.renderer.rules.code_inline = guard
+
+  // Inline code keeps its <code> wrapper (native behaviour) while the
+  // content itself is still brace-escaped.
+  md.renderer.rules.code_inline = (tokens, idx) =>
+    `<code>${escapeMustaches(tokens[idx]?.content ?? '')}</code>`
 }

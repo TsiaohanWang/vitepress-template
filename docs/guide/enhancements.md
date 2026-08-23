@@ -89,20 +89,20 @@ const collections = {
 
 ## 自定义容器与主题色
 
-在 VitePress 内置 `info / tip / warning / danger / details` 基础上，模板新增 `note / question / example / abstract / bug` 五种容器，全部按 Obsidian 风格配置主题色与 gravity-ui 标题图标：
+在 VitePress 内置 `info / tip / warning / danger / details` 基础上，模板新增 `note / question / example / abstract / bug` 五种容器，全部按 Obsidian 风格配置主题色与 `gravity-ui` 标题图标：
 
 | 容器 | 主题色 | 标题图标 |
 |---|---|---|
-| info | 青色 | gravity-ui:circle-info |
-| note | 蓝色 | gravity-ui:pencil-to-square |
-| tip | 绿色 | gravity-ui:bulb |
-| abstract | 靛色 | gravity-ui:binoculars |
-| question | 金橙 | gravity-ui:circle-question |
-| warning | 橙色 | gravity-ui:triangle-exclamation |
-| danger | 红色 | gravity-ui:shield-exclamation |
-| bug | 洋红 | gravity-ui:bug |
-| example | 紫色 | gravity-ui:shapes-3 |
-| details | 灰色 | gravity-ui:magnifier |
+| `info` | 青色 | `gravity-ui:circle-info` |
+| `note` | 蓝色 | `gravity-ui:pencil-to-square` |
+| `tip` | 绿色 | `gravity-ui:bulb` |
+| `abstract` | 靛色 | `gravity-ui:binoculars` |
+| `question` | 金橙 | `gravity-ui:circle-question` |
+| `warning` | 橙色 | `gravity-ui:triangle-exclamation` |
+| `danger` | 红色 | `gravity-ui:shield-exclamation` |
+| `bug` | 洋红 | `gravity-ui:bug` |
+| `example` | 紫色 | `gravity-ui:shapes-3` |
+| `details` | 灰色 | `gravity-ui:magnifier` |
 
 ```md
 ::: bug
@@ -128,7 +128,7 @@ Question 容器（金橙色），支持自定义标题。
 - 主题色同时作用于容器背景（7% 不透明度）、边框（35%）与标题文字；正文保持常规文字色
 - 行内代码与链接的字体颜色跟随所处正文颜色（全站生效，容器内亦然）；行内代码保留底色、链接保留下划线与 hover 反馈以作区分
 - 容器内的行内代码底色随容器主题色（明亮 10% / 暗色 16% 不透明度），与容器背景、边框同源；围栏代码块不受影响
-- 标题图标以 CSS mask 方式内嵌（gravity-ui SVG data URI），纯静态资源、SSR 友好，颜色自动跟随标题色
+- 标题图标以 CSS mask 方式内嵌（`gravity-ui` SVG data URI），纯静态资源、SSR 友好，颜色自动跟随标题色
 - 暗色模式下强调色自动调亮以保证对比度
 - GFM Alert 与同名容器共享样式：`> [!NOTE]` 即蓝色 note 效果；VitePress 原生支持 `> [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION]`
 - 新增类型两步：在 `config.mts` 的 `markdown.container.customContainers` 注册，并在 `theme/custom.css` 补充该类型的 `--cb-rgb` 与 `--cb-icon`——其余样式规则对全部容器类型通用，无需改动
@@ -147,11 +147,11 @@ Question 容器（金橙色），支持自定义标题。
 
 | 字段 | 必填 | 说明 |
 |---|---|---|
-| title | ✅ | 主标题；同时作为浏览器标签页标题 |
-| subtitle | – | 副标题 |
-| author | – | 作者 |
-| date | – | 日期，展示为 YYYY-MM-DD |
-| keywords | ✅ | 关键词标签；数组或逗号分隔字符串均可（构建时归一化为数组） |
+| `title` | ✅ | 主标题；同时作为浏览器标签页标题 |
+| `subtitle` | – | 副标题 |
+| `author` | – | 作者 |
+| `date` | – | 日期，展示为 `YYYY-MM-DD` |
+| `keywords` | ✅ | 关键词标签；数组或逗号分隔字符串均可（构建时归一化为数组） |
 
 ```md
 ---
@@ -167,11 +167,11 @@ keywords:
 
 - 校验在 `config.mts` 的 `transformPageData` 中执行：非首页内容页缺失 `title` 或 `keywords` 时**构建直接失败**，错误信息指明文件与缺失字段；归一化逻辑位于 `.vitepress/frontmatter.ts`，组件与构建校验共用同一实现
 - `layout: home` 的首页不受校验约束
-- 作者/日期/标签自带 gravity-ui 图标（CSS mask，SSR 友好）；样式位于组件的 scoped style
+- 作者/日期/标签自带 `gravity-ui` 图标（CSS mask，SSR 友好）；样式位于组件的 scoped style
 
 ## 站点品牌色
 
-站点品牌色为 **#F74C00**（橙红），作用于链接 hover、按钮、侧边栏/导航高亮、hero 按钮等全部品牌色场景。明暗两套定义在 `theme/custom.css`：
+站点品牌色为 `#F74C00`（橙红），作用于链接 hover、按钮、侧边栏/导航高亮、hero 按钮等全部品牌色场景。明暗两套定义在 `theme/custom.css`：
 
 ```css
 html:not(.dark) {
@@ -204,13 +204,13 @@ html:not(.dark) {
 ```
 ````
 
-```typst 围栏在构建期经 `@myriaddreamin/typst-ts-node-compiler`（N-API 原生插件，无需 Rust 工具链）编译为**自包含内联 SVG**：字形以路径嵌入、无 `<text>` 元素与外部引用，纯静态 SSR，零客户端 JS。
+```` ```typst ```` 围栏在构建期经 `@myriaddreamin/typst-ts-node-compiler`（N-API 原生插件，无需 Rust 工具链）编译为**自包含内联 SVG**：字形以路径嵌入、无 `<text>` 元素与外部引用，纯静态 SSR，零客户端 JS。
 
 - **渲染与展示分离**：恰好 3 个反引号的围栏渲染为 SVG；4 个及以上反引号的同名围栏按普通代码块高亮显示源码原文（CommonMark 嵌套约定）——需要同时给出"示例代码 + 渲染效果"时，先写长围栏代码块、再写短围栏渲染块
 - **图表类源码务必设置** `#set page(width: auto, height: auto, margin: ...)`，否则输出整张 A4 页面而非贴合图形
-- `@preview/*` 包（CeTZ / Alchemist / Lilaq 等）首次使用时自动下载至 `~/.cache/typst/packages`；CI 需允许该网络访问，或预先缓存
+- `@preview/*` 包（`cetz` / `alchemist` / `lilaq` / `fletcher` / `tiaoma` 等）首次使用时自动下载至 `~/.cache/typst/packages`；CI 需允许该网络访问，或预先缓存
 - 编译失败不中断构建：终端打印诊断，页面原位展示错误占位块；已编译结果按内容哈希缓存在 `.vitepress/cache/typst-svg/`（已 gitignore）
-- 实现见 `.vitepress/typst.ts`；站点示例页 [Typst 图表示例](/examples/typst-diagrams) 含 CeTZ（官方 gallery karls-picture）/ Alchemist / Lilaq 三例
+- 实现见 `.vitepress/typst.ts`；站点示例页 [Typst 图表示例](/examples/typst-diagrams) 含 `cetz`（官方 gallery `karls-picture`）/ `alchemist` / `lilaq` / `fletcher` / `tiaoma` 五例
 
 ## 花括号安全防护
 

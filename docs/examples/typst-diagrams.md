@@ -6,6 +6,8 @@ keywords:
   - CeTZ
   - Alchemist
   - Lilaq
+  - Fletcher
+  - Tiaoma
 ---
 
 本页演示 ```typst 围栏代码块的构建期渲染：代码经 typst.ts 编译为自包含的内联 SVG，无客户端 JS、无运行时请求。
@@ -19,7 +21,7 @@ keywords:
 
 ## CeTZ
 
-单位圆三角函数图（官方 gallery 示例 karls-picture）。源码：
+单位圆三角函数图（官方 gallery 示例 `karls-picture`）。源码：
 
 ````typst
 #import "@preview/cetz:0.5.2"
@@ -92,7 +94,7 @@ keywords:
   // Draw the outer opposite leg of the triangle
   line((1, 0), (1, calc.tan(30deg)), name: "tan", stroke: (paint: orange))
   // Draw the tangent equasion at the top and to the right of the line
-  content("tan.end", $ tan alpha = sin alpha / cos alpha $, anchor: "west")
+  content("tan.end", $ tan alpha = frac(sin alpha, cos alpha) $, anchor: "west")
 })
 ````
 
@@ -151,7 +153,7 @@ keywords:
   content(("cos.start", 50%, "cos.end"), text(blue)[$ cos alpha $], anchor: "north")
 
   line((1, 0), (1, calc.tan(30deg)), name: "tan", stroke: (paint: orange))
-  content("tan.end", $ tan alpha = sin alpha / cos alpha $, anchor: "west")
+  content("tan.end", $ tan alpha = frac(sin alpha, cos alpha) $, anchor: "west")
 })
 ```
 
@@ -307,4 +309,124 @@ keywords:
     label: [Temperature], color: red, stroke: 1pt, mark-size: 6pt,
   ),
 )
+```
+
+## Fletcher
+
+机器学习模型架构图（官方 gallery 示例 03-ml-architecture）。源码：
+
+````typst
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+#import fletcher.shapes: house, hexagon
+#set page(width: auto, height: auto, margin: 5mm, fill: white)
+#set text(font: "New Computer Modern")
+
+#let blob(pos, label, tint: white, ..args) = node(
+	pos, align(center, label),
+	width: 28mm,
+	fill: tint.lighten(60%),
+	stroke: 1pt + tint.darken(20%),
+	corner-radius: 5pt,
+	..args,
+)
+
+#diagram(
+	spacing: 8pt,
+	cell-size: (8mm, 10mm),
+	edge-stroke: 1pt,
+	edge-corner-radius: 5pt,
+	mark-scale: 70%,
+
+	blob((0,1), [Add & Norm], tint: yellow, shape: hexagon),
+	edge(),
+	blob((0,2), [Multi-Head\ Attention], tint: orange),
+	blob((0,4), [Input], shape: house.with(angle: 30deg),
+		width: auto, tint: red),
+
+	for x in (-.3, -.1, +.1, +.3) {
+		edge((0,2.8), (x,2.8), (x,2), "-|>")
+	},
+	edge((0,2.8), (0,4)),
+
+	edge((0,3), "l,uu,r", "--|>"),
+	edge((0,1), (0, 0.35), "r", (1,3), "r,u", "-|>"),
+	edge((1,2), "d,rr,uu,l", "--|>"),
+
+	blob((2,0), [Softmax], tint: green),
+	edge("<|-"),
+	blob((2,1), [Add & Norm], tint: yellow, shape: hexagon),
+	edge(),
+	blob((2,2), [Feed\ Forward], tint: blue),
+)
+````
+
+渲染效果：
+
+```typst
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+#import fletcher.shapes: house, hexagon
+#set page(width: auto, height: auto, margin: 5mm, fill: white)
+#set text(font: "New Computer Modern")
+
+#let blob(pos, label, tint: white, ..args) = node(
+	pos, align(center, label),
+	width: 28mm,
+	fill: tint.lighten(60%),
+	stroke: 1pt + tint.darken(20%),
+	corner-radius: 5pt,
+	..args,
+)
+
+#diagram(
+	spacing: 8pt,
+	cell-size: (8mm, 10mm),
+	edge-stroke: 1pt,
+	edge-corner-radius: 5pt,
+	mark-scale: 70%,
+
+	blob((0,1), [Add & Norm], tint: yellow, shape: hexagon),
+	edge(),
+	blob((0,2), [Multi-Head\ Attention], tint: orange),
+	blob((0,4), [Input], shape: house.with(angle: 30deg),
+		width: auto, tint: red),
+
+	for x in (-.3, -.1, +.1, +.3) {
+		edge((0,2.8), (x,2.8), (x,2), "-|>")
+	},
+	edge((0,2.8), (0,4)),
+
+	edge((0,3), "l,uu,r", "--|>"),
+	edge((0,1), (0, 0.35), "r", (1,3), "r,u", "-|>"),
+	edge((1,2), "d,rr,uu,l", "--|>"),
+
+	blob((2,0), [Softmax], tint: green),
+	edge("<|-"),
+	blob((2,1), [Add & Norm], tint: yellow, shape: hexagon),
+	edge(),
+	blob((2,2), [Feed\ Forward], tint: blue),
+)
+```
+
+## Tiaoma
+
+条形码生成（基于 zint 的 WASM 插件，支持近百种码制）。源码：
+
+````typst
+#import "@preview/tiaoma:0.3.0"
+#set page(width: auto, height: auto, margin: 5pt)
+
+= tiáo mǎ
+
+#tiaoma.ean("1234567890128")
+````
+
+渲染效果：
+
+```typst
+#import "@preview/tiaoma:0.3.0"
+#set page(width: auto, height: auto, margin: 5pt)
+
+= tiáo mǎ
+
+#tiaoma.ean("1234567890128")
 ```
