@@ -56,6 +56,38 @@ keywords:
 })
 ```
 
+
+官方 CeTZ-Plot gallery 分组柱状图（`cetz` 0.5.2 + `cetz-plot` 0.1.4；白色图例面板将触发衬板配对）：
+
+```typst
+#import "@preview/cetz:0.5.2": canvas, draw
+#import "@preview/cetz-plot:0.1.4": chart
+
+#set page(width: auto, height: auto, margin: .5cm)
+
+#let data2 = (
+  ([15-24], 18.0, 20.1, 23.0, 17.0),
+  ([25-29], 16.3, 17.6, 19.4, 15.3),
+  ([30-34], 14.0, 15.3, 13.9, 18.7),
+  ([35-44], 35.5, 26.5, 29.4, 25.8),
+  ([45-54], 25.0, 20.6, 22.4, 22.0),
+  ([55+],   19.9, 18.2, 19.2, 16.4),
+)
+
+#canvas({
+  draw.set-style(legend: (fill: white), barchart: (bar-width: .8, cluster-gap: 0))
+  chart.barchart(mode: "clustered",
+                 size: (9, auto),
+                 label-key: 0,
+                 value-key: (..range(1, 5)),
+                 x-tick-step: 2.5,
+                 data2,
+                 labels: ([Low], [Medium], [High], [Very high]),
+                 legend: "inner-north-east")
+})
+
+```
+
 ## Alchemist
 
 化学骨架式结构图（官方手册示例）。
@@ -87,6 +119,51 @@ keywords:
 })
 ```
 
+
+官方 README 立体键与着色化学链示例（红/蓝/加粗键与楔形键）：
+
+```typst
+#import "@preview/alchemist:0.2.0": *
+#set page(width: auto, height: auto, margin: 5pt)
+#skeletize({
+  fragment(name: "A", "A")
+  single()
+  fragment("B")
+  branch({
+    single(angle: 1)
+    fragment(
+      "W",
+      links: (
+        "A": double(stroke: red),
+      ),
+    )
+    single()
+    fragment(name: "X", "X")
+  })
+  branch({
+    single(angle: -1)
+    fragment("Y")
+    single()
+    fragment(
+      name: "Z",
+      "Z",
+      links: (
+        "X": single(stroke: black + 3pt),
+      ),
+    )
+  })
+  single()
+  fragment(
+    "C",
+    links: (
+      "X": cram-filled-left(fill: blue),
+      "Z": single(),
+    ),
+  )
+})
+
+```
+
 ## Lilaq
 
 柏林气候图（双轴柱线复合图；轴标与图例用中文书写，展示 Typst 的 CJK 排版能力——渲染依赖构建环境的中文字体）。
@@ -110,6 +187,28 @@ keywords:
   lq.plot(range(12), temperature,
     label: [气温], color: red, stroke: 1pt, mark-size: 6pt),
 )
+```
+
+
+官方 quickstart「Precious data」双序列图（方/圆标记 + 函数曲线）：
+
+```typst
+#import "@preview/lilaq:0.6.0" as lq
+#set page(width: auto, height: auto, margin: 5pt)
+#let xs = (0, 1, 2, 3, 4)
+
+#lq.diagram(
+  title: [Precious data],
+  xlabel: $x$,
+  ylabel: $y$,
+
+  lq.plot(xs, (3, 5, 4, 2, 3), mark: "s", label: [A]),
+  lq.plot(
+    xs, x => 2 * calc.cos(x) + 3,
+    mark: "o", label: [B]
+  )
+)
+
 ```
 
 ## Fletcher
@@ -148,6 +247,29 @@ keywords:
 )
 ```
 
+
+官方 README 状态机——节点填充为**径向渐变**，同时考验渐变豁免与文字墨迹适配：
+
+```typst
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+#set page(width: auto, height: auto, margin: 5pt)
+#set text(10pt)
+#diagram(
+	node-stroke: .1em,
+	node-fill: gradient.radial(blue.lighten(80%), blue, center: (30%, 20%), radius: 80%),
+	spacing: 4em,
+	edge((-1, 0), "r", "-|>", `open(path)`, label-pos: 0, label-side: center),
+	node((0, 0), `reading`, radius: 2em),
+	edge(`read()`, "-|>"),
+	node((1, 0), `eof`, radius: 2em),
+	edge(`close()`, "-|>"),
+	node((2, 0), `closed`, radius: 2em, extrude: (-2.5, 0)),
+	edge((0, 0), (0, 0), `read()`, "--|>", bend: 130deg),
+	edge((0, 0), (2, 0), `close()`, "-|>", bend: -40deg),
+)
+
+```
+
 ## Tiaoma
 
 条形码生成（基于 zint 的 WASM 插件，支持近百种码制）。
@@ -161,6 +283,17 @@ keywords:
 #tiaoma.ean("1234567890128")
 ```
 
+
+官方 QR 码（`tiaoma.qrcode`）：
+
+```typst
+#import "@preview/tiaoma:0.3.0"
+#set page(width: auto, height: auto, margin: 5pt)
+
+#tiaoma.qrcode("https://typst.app")
+
+```
+
 ## Physica
 
 数字时序图（官方手册示例：时钟与总线状态波形，`&` 对齐、`\` 换行需在数学模式内）。
@@ -171,6 +304,17 @@ keywords:
 
 $ "clk:" & signals("|1....|0....|1....|0....|1....|0....|1....|0..", step: #0.5em) \
   "bustyle:" & signals(" #.... X=... ..... ..... X=... ..... ..... X#.", step: #0.5em) $
+```
+
+
+官方向量微积分记号（`curl` / `grad` / `tensor` / `pdv`）：
+
+```typst
+#import "@preview/physica:0.9.8": *
+#set page(width: auto, height: auto, margin: 5pt)
+
+$ curl (grad f), tensor(T, -mu, +nu), pdv(f, x, y, [1, 2]) $
+
 ```
 
 ## Zap
@@ -211,4 +355,21 @@ $ "clk:" & signals("|1....|0....|1....|0....|1....|0....|1....|0..", step: #0.5e
 #let canvas = zap.circuit(example1)
 
 #canvas
+```
+
+
+官方极简电路（node + 带电流标注的电阻）：
+
+```typst
+#import "@preview/zap:0.6.0"
+#set page(width: auto, height: auto, margin: 5pt)
+
+#zap.circuit({
+    import zap: *
+
+    // Here is a minimalist example
+    node("B", (0, 0))
+    resistor("r1", "B", (rel: (0, 4)), i: $i_1$)
+})
+
 ```

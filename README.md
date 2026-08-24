@@ -65,7 +65,7 @@ pnpm typecheck      # vue-tsc 类型检查
 │  └─ examples/           # Examples section，对应 /examples/...
 │     ├─ markdown-examples.md
 │     ├─ api-examples.md      # 运行时 API 与主题扩展
-│     └─ typst-diagrams.md    # Typst 图表渲染效果集（七例）
+│     └─ typst-diagrams.md    # Typst 图表渲染效果集（14 例）
 ├─ nav.json               # 顶部导航配置
 ├─ sidebar.json           # 侧边栏配置
 ├─ package.json           # ESM（type: module）+ docs:* / typecheck 脚本 + engines/packageManager

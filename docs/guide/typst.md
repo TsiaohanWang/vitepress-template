@@ -167,4 +167,4 @@ $ e^(i pi) + 1 = 0 $
 
 ## 实现位置
 
-实现见 `.vitepress/typst.ts`：markdown-it fence 渲染器覆写 + 带缓存的编译封装。站点示例页 [Typst 图表示例](/examples/typst-diagrams) 含 `cetz`（官方 gallery `karls-picture`）/ `alchemist` / `lilaq` / `fletcher` / `tiaoma` / `physica` / `zap` 七例。
+实现见 `.vitepress/typst.ts`：markdown-it fence 渲染器覆写 + 带缓存的编译封装。站点示例页 [Typst 图表示例](/examples/typst-diagrams) 含 `cetz`（官方 gallery `karls-picture`）/ `alchemist` / `lilaq` / `fletcher` / `tiaoma` / `physica` / `zap` 十四例。
