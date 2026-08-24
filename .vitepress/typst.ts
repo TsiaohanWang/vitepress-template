@@ -74,17 +74,24 @@ export interface TypstRenderResult {
 //     <filter> (luminance/filter arithmetic depends on exact colors),
 //     <clipPath> (no visible paint), <script>.
 //
-// Role mapping (mermaid-style: darken surfaces, lift lines):
-//   near-black ink          -> currentColor          follows document text
-//   page canvas (near-white)-> var(--vp-c-bg)        explicit call-site only
-//   bright chips L>=.62     -> lightness x~0.3        readable under light ink
-//   dark strokes L<=.26     -> lifted to L=.58        visible on dark background
-//   mid tones / grays       -> untouched              legible on both themes
+// GOVERNING LAW -- bidirectional cluster coherence:
+//   backdrop adapted    ->  its covering ink adapts with it;
+//   backdrop unchanged  ->  its covering ink keeps the ORIGINAL color.
+// The pairing scan enforces the "adapted" half; the geometry pass enforces
+// the "unchanged" half. An invariant audit (`pinAudit`) asserts zero
+// violations across every shipped figure.
 //
-// var() cannot appear in presentation attributes, and <style> tags are hard
-// compile errors in markdown (client Vue templates reject side-effect tags),
-// so theme switching rides on INLINE light-dark() values resolved against
-// the color-scheme declared for figures in custom.css.
+// Role mapping (mermaid-style: darken surfaces, lift lines):
+//   near-black ink        -> currentColor             follows document text
+//   light surfaces L>=.55 -> paper role where paired; otherwise literal
+//   bright chips L>=.62   -> lightness x~0.3          readable under light ink
+//   dark strokes L<=.26   -> lifted to L=.58          visible on dark background
+//   mid tones / grays     -> untouched                legible on both themes
+//
+// var() cannot appear in presentation attributes, so theme switching rides
+// on INLINE light-dark() values resolved against the color-scheme declared
+// for figures in custom.css. Geometry pinning executes LAST so its literal
+// blacks survive every earlier pass.
 // ---------------------------------------------------------------------------
 
 interface RGBa {
@@ -199,10 +206,6 @@ const NAMED_COLORS: ReadonlyMap<string, RGBa> = (() => {
 })()
 
 const NUM_SRC = '-?(?:\\d*\\.\\d+|\\d+)(?:[eE][+-]?\\d+)?'
-// Color grammar per CSS Color 4: hex forms, functional rgb()/rgba() and
-// hsl()/hsla() (comma and modern space syntax), CSS named colors. Deliberate
-// non-members: none/url()/var()/currentColor/inherit -- they carry no theme
-// role and must survive verbatim.
 const COLOR_VALUE_RE = new RegExp(
   '#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})(?!\\w)' +
     '|\\brgba?\\(\\s*' + NUM_SRC + '(?:\\s*,\\s*' + NUM_SRC + '){2,3}\\s*\\)' +
@@ -224,13 +227,11 @@ export function parseColorValue(raw: string): RGBa | undefined {
   if (/^rgba?\(/i.test(v)) {
     const nums = [...v.matchAll(new RegExp(NUM_SRC, 'gi'))].map((x) => parseFloat(x[0]))
     if (nums.length < 3) return undefined
-    const conv = /^rgb/i.test(v)
-      ? nums.map((n, idx) => (idx < 3 ? n / 255 : n))
-      : nums.map((n, idx) => (idx < 3 ? (n <= 1 ? n : n / 255) : n))
-    const r = conv[0]
-    const g = conv[1]
-    const b = conv[2]
-    const a = conv[3]
+    const scaled = nums.map((n, idx) => (/^rgb/i.test(v) && idx < 3 ? n / 255 : n))
+    const r = scaled[0]
+    const g = scaled[1]
+    const b = scaled[2]
+    const a = scaled[3]
     if ([r, g, b].some((c) => !Number.isFinite(c))) return undefined
     return {
       r: r!,
@@ -243,10 +244,11 @@ export function parseColorValue(raw: string): RGBa | undefined {
   if (/^hsla?\(/i.test(v)) {
     const nums = [...v.matchAll(new RegExp(NUM_SRC, 'gi'))].map((x) => parseFloat(x[0]))
     if (nums.length < 3) return undefined
-    const hue = nums[0] ?? 0
-    const sat = (nums[1] ?? 0) / 100
-    const lig = (nums[2] ?? 0) / 100
-    const { r, g, b } = hslToRgb(hue, Math.min(1, Math.max(0, sat)), Math.min(1, Math.max(0, lig)))
+    const { r, g, b } = hslToRgb(
+      nums[0] ?? 0,
+      Math.min(1, Math.max(0, (nums[1] ?? 0) / 100)),
+      Math.min(1, Math.max(0, (nums[2] ?? 0) / 100)),
+    )
     const a = nums[3]
     return { r, g, b, a: a !== undefined ? Math.min(1, Math.max(0, a)) : undefined }
   }
@@ -264,6 +266,11 @@ function isInkColor(rgb: RGBa): boolean {
   if (!isOpaque(rgb)) return false
   const { s, l } = rgbToHsl(rgb)
   return l <= 0.1 && s <= 0.35
+}
+
+function isNearWhiteRGB(rgb: RGBa): boolean {
+  const { s, l } = rgbToHsl(rgb)
+  return s < 0.08 && l >= 0.93
 }
 
 // Unified light-surface candidate: one predicate across canvas detection,
@@ -289,14 +296,10 @@ function darkCounterpartRGB(rgb: RGBa, allowPaper: boolean): string | undefined 
     return undefined
   }
 
-  if (allowPaper && s < 0.25 && l >= 0.55) {
-    // Paper role: light surfaces co-adapt with their covering ink.
-    return 'var(--vp-c-bg)'
-  }
+  // Paper role: the whole light band co-adapts with covering ink.
+  if (allowPaper && s < 0.25 && l >= 0.55) return 'var(--vp-c-bg)'
 
-  if (s < 0.08) {
-    return undefined // mid grays read fine on both themes
-  }
+  if (s < 0.08) return undefined // mid grays read fine on both themes
 
   if (l >= 0.62) {
     // Bright chip surfaces: darken along the same hue so light ink stays
@@ -306,7 +309,7 @@ function darkCounterpartRGB(rgb: RGBa, allowPaper: boolean): string | undefined 
   }
   if (l <= 0.26) {
     // Very dark chromatic strokes disappear on dark backgrounds: lift them.
-    return rgbToHex({ ...hslToRgb(h, s, 0.58) })
+    return rgbToHex(hslToRgb(h, s, 0.58))
   }
   return undefined
 }
@@ -399,24 +402,37 @@ function unfoldEmbeddedSvgImages(svg: string): string {
         .replace(/<!DOCTYPE[^>]*>/g, '')
         .trim()
 
-      // Merge geometry: image attributes win, inner-root attributes (e.g.
-      // intrinsic width/height/viewBox) survive where the image has none --
-      // dropping them would collapse the figure's intrinsic size.
-      inner = inner.replace(/^<svg\b([^>]*)>/, (_m, innerAttrs: string) => {
-        const merged = new Map<string, string>()
-        for (const [, k, v] of innerAttrs.matchAll(/\s([a-zA-Z:-]+)="([^"]*)"/g)) {
+      // Merge scope discipline: parse ONLY the decoded root tag's own
+      // attributes, then overlay the whitelisted geometry keys from the
+      // <image>. Scanning the whole inner document here would hoist leaf
+      // attributes (d=, x/y of trailing <text>s, font-*) onto the root and
+      // translate the barcode out of the canvas.
+      const merged = new Map<string, string>()
+      const rootOpen = /^<svg\b([^>]*)>/.exec(inner)?.[1]
+      if (rootOpen !== undefined) {
+        for (const [, k, v] of rootOpen.matchAll(/\s([a-zA-Z:-]+)="([^"]*)"/g)) {
           merged.set(k!, v!)
         }
-        for (const [, k, v] of rawAttrs.matchAll(
-          /\s(x|y|width|height|preserveAspectRatio|transform)="([^"]*)"/g,
-        )) {
-          merged.set(k!, v!)
-        }
-        return `<svg ${[...merged].map(([k, v]) => `${k}="${v}"`).join(' ')}>`
-      })
+      }
+      for (const [, k, v] of rawAttrs.matchAll(
+        /\s(x|y|width|height|preserveAspectRatio|transform)="([^"]*)"/g,
+      )) {
+        merged.set(k!, v!)
+      }
+      inner = inner.replace(
+        /^<svg\b[^>]*/,
+        `<svg ${[...merged].map(([k, v]) => `${k}="${v}"`).join(' ')}>`,
+      )
       return inner
     },
   )
+}
+
+interface Box {
+  x0: number
+  y0: number
+  x1: number
+  y1: number
 }
 
 function pathGeometry(d: string): { box: Box; polyArea: number } | undefined {
@@ -514,32 +530,29 @@ function pathGeometry(d: string): { box: Box; polyArea: number } | undefined {
   return { box, polyArea: Math.abs(polyArea) / 2 }
 }
 
-// Geometry pass: ink pinned over PRESERVED literal light surfaces.
+// Scan for ink elements that sit inside preserved light surfaces / thick
+// bands and therefore violate cluster coherence if left adaptive.
 //
-// Backdrops whose ink was too far away in paint order for the pairing scan
-// stay literal (chart legends drawn early, labels much later). A preserved
-// light surface forces DARK ink -- letting such ink follow currentColor
-// would brighten it into an unreadable smear on the untouched panel. Every
-// ink element whose center lies inside a preserved surface's polygon/bbox is
-// therefore reverted to original black.
-//
-// Surface eligibility: literal light OPAQUE fills that are SOLID in their
-// bounding box (polyArea/bboxArea >= SOLID_RATIO). Thin strokes and ring
-// outlines collapse to ~zero polygon area and never create pinning zones (a
-// ring's bbox would otherwise swallow the whole atom). Translucent whites
-// are excluded too -- they adapt alongside their covering ink. Gradient
-// defs are exempt upstream; their mid-tone stops tolerate both polarities,
-// so covering text keeps adapting there by design.
-const SOLID_RATIO = 0.12
-
-function pinInkOverLiteralSurfaces(svg: string): string {
+// GOVERNING LAW (bidirectional cluster coherence):
+//   backdrop unchanged  ->  its covering ink keeps the ORIGINAL color;
+//   backdrop adapted    ->  its covering ink adapts with it.
+// The pairing scan enforces the "adapted" half upstream; this geometry scan
+// enforces the "unchanged" half.
+function scanPinCandidates(
+  svg: string,
+): Array<{ start: number; end: number; desc: string }> {
   const vb = /viewBox="([\d.eE+-]+) ([\d.eE+-]+) ([\d.eE+-]+) ([\d.eE+-]+)"/.exec(svg)
   const minArea = vb
     ? 0.002 * parseFloat(vb[3]!) * parseFloat(vb[4]!)
     : 0 // noise floor: specks/markers never become pinning zones
 
+  // A "solid" surface fills its bounding box (discs/rects); thin strokes and
+  // ring outlines collapse to ~zero polygon area and must never create
+  // pinning zones (a ring's bbox would swallow the whole atom).
+  const SOLID_RATIO = 0.12
+
   const surfaces: Box[] = []
-  const inkSpans: Array<{ start: number; end: number }> = []
+  const candidates: Array<{ start: number; end: number; desc: string }> = []
   let gradDepth = 0
 
   for (const m of svg.matchAll(/<[a-zA-Z!/][^>]*>/g)) {
@@ -560,9 +573,27 @@ function pinInkOverLiteralSurfaces(svg: string): string {
     const fillRgb = fillMatch?.[1] ? parseColorValue(fillMatch[1]) : undefined
     const dMatch = /\bd="([^"]+)"/.exec(tag)
 
-    // Preserved literal light OPAQUE shape -> protected surface.
-    // Translucent lights are excluded: they adapt via color-mix alongside
-    // their covering ink, so nothing may be pinned against them.
+    // THICK-STROKE BANDS probe-insert
+
+    // THICK-STROKE BANDS (Gantt/task bars): stroke-width >= 6pt acts as a
+    // surface -- the band keeps its original polarity and covering ink is
+    // pinned along with it. Threshold far above line-weight conventions,
+    // far below figure dims -> generalizes across libraries.
+    const swNum = /\bstroke-width="([\d.]+)"/.exec(tag)
+    if (swNum?.[1] && parseFloat(swNum[1]) >= 6 && dMatch?.[1]) {
+      const geo = pathGeometry(dMatch[1])
+      if (geo) {
+        const half = parseFloat(swNum[1]) / 2
+        surfaces.push({
+          x0: geo.box.x0 - half,
+          y0: geo.box.y0 - half,
+          x1: geo.box.x1 + half,
+          y1: geo.box.y1 + half,
+        })
+      }
+    }
+
+    // Preserved literal light OPAQUE solid shape -> protected surface.
     if (
       cls.includes('typst-shape') &&
       fillMatch?.[1] &&
@@ -582,22 +613,25 @@ function pinInkOverLiteralSurfaces(svg: string): string {
     }
 
     // Tag-local self-pin: a light literal fill sharing its tag with
-    // currentColor paints (electron dots: gray fill + adapting outline)
-    // keeps its original dark outline in both themes.
+    // currentColor paints (electron dots: gray fill + adapting outline).
     let selfPinned = false
     if (
       fillRgb &&
-      fillMatch![1]!.length <= 7 &&
+      fillMatch?.[1] !== undefined &&
+      fillMatch[1].length <= 7 &&
       isLightSurfaceRGB(fillRgb) &&
       tag.includes('currentColor')
     ) {
-      inkSpans.push({ start: m.index, end: m.index + tag.length })
+      candidates.push({
+        start: m.index,
+        end: m.index + tag.length,
+        desc: 'self-pin',
+      })
       selfPinned = true
     }
 
-    // Ink candidates: currentColor elements whose center lies inside any
-    // protected surface (nucleus text over the gray disc, legend labels
-    // over white panels, ...).
+    // Containment candidates: currentColor elements centered inside any
+    // protected surface.
     if (tag.includes('currentColor') && !selfPinned) {
       const d = dMatch?.[1]
       const usePos = /\bx="([\d.eE+-]+)".*?\by="([\d.eE+-]+)"/.exec(tag)
@@ -608,66 +642,81 @@ function pinInkOverLiteralSurfaces(svg: string): string {
         const uy = parseFloat(usePos[2]!)
         box = { x0: ux, y0: uy, x1: ux + 1, y1: uy + 1 }
       }
-      if (box && surfaces.some((s) => {
-        const mx = (box!.x0 + box!.x1) / 2
-        const my = (box!.y0 + box!.y1) / 2
-        return mx >= s.x0 && mx <= s.x1 && my >= s.y0 && my <= s.y1
-      })) {
-        inkSpans.push({ start: m.index, end: m.index + tag.length })
+      if (
+        box &&
+        surfaces.some((s) => {
+          const mx = (box!.x0 + box!.x1) / 2
+          const my = (box!.y0 + box!.y1) / 2
+          return mx >= s.x0 && mx <= s.x1 && my >= s.y0 && my <= s.y1
+        })
+      ) {
+        candidates.push({
+          start: m.index,
+          end: m.index + tag.length,
+          desc: 'containment',
+        })
       }
     }
   }
+  return candidates
+}
+
+function pinInkOverLiteralSurfaces(svg: string): string {
+  const candidates = scanPinCandidates(svg)
 
   // Revert from the end backwards so earlier offsets stay valid.
-  for (const span of inkSpans.reverse()) {
-    const seg = svg.slice(span.start, span.end)
+  for (const cand of candidates.reverse()) {
+    const seg = svg.slice(cand.start, cand.end)
     const reverted = seg
       .replaceAll('fill="currentColor"', 'fill="#000000"')
       .replaceAll('stroke="currentColor"', 'stroke="#000000"')
       .replaceAll('fill:currentColor', 'fill:#000000')
       .replaceAll('stroke:currentColor', 'stroke:#000000')
-    svg = svg.slice(0, span.start) + reverted + svg.slice(span.end)
+    svg = svg.slice(0, cand.start) + reverted + svg.slice(cand.end)
   }
   return svg
+}
+
+// Test hook: after adaptation this must report ZERO entries -- any hit means
+// an adaptive ink element still sits inside a preserved light surface,
+// violating bidirectional cluster coherence.
+export function pinAudit(svg: string): Array<Record<string, unknown>> {
+  return scanPinCandidates(svg)
 }
 
 export function applySvgTheme(input: string): string {
   // 1) Embedded vector images first: their colors must join the pipeline.
   let svg = unfoldEmbeddedSvgImages(input)
 
-  // 2) Structural canvas detection: typst always paints the page as the very
-  //    first full-bleed path ("M 0 0v ... Z"). A NON-near-white canvas means
-  //    the author designed for a dark/tinted surface -- remapping ink or
-  //    chips would destroy that design, so the figure passes through as-is.
-  //    (Purely structural + luminance-based; no hardcoded colors.)
+  // 2) Structural canvas detection: passthrough only for an AUTHORED opaque
+  //    tint outside the light band (dark/tinted designs). `fill: none` or
+  //    missing paint means a transparent canvas -- adapt normally.
   const bgMatch =
     /<path\b[^>]*\bclass="typst-shape"[^>]*\bfill="([^"]*)"[^>]*\bd="M 0 0v /.exec(svg)
   const bgRgb = bgMatch?.[1] ? parseColorValue(bgMatch[1]) : undefined
-  const bgIsAdaptiveWhite = !!bgRgb && isOpaque(bgRgb) && isLightSurfaceRGB(bgRgb)
-  if (bgMatch && !bgIsAdaptiveWhite) return svg
+  if (bgMatch?.[1] && bgRgb && isOpaque(bgRgb) && !isLightSurfaceRGB(bgRgb)) return svg
 
   // 3) Ink: currentColor is a CSS-wide keyword, valid both in presentation
   //    attributes and style declarations.
   for (const [from, to] of INK_SWAPS) svg = svg.replaceAll(from, to)
 
-  // 4) The canvas path itself gets the paper role (near-white -> follows
+  // 4) The canvas path itself gets the paper role (light -> follows
   //    --vp-c-bg).
   svg = svg.replace(
     /<path\b([^>]*\bclass="typst-shape"[^>]*?)\bfill="([^"]*)"/,
     (_m, attrs: string, value: string) => {
       const rgb = parseColorValue(value)
-      if (!rgb || !isOpaque(rgb) || !isLightSurfaceRGB(rgb)) return _m
+      if (!rgb || !isOpaque(rgb) || !isNearWhiteRGB(rgb)) return _m
       const mapped = adaptPaint(value, true)
       if (!mapped) return _m
       return `<path${attrs}style="fill:${mapped};"`
     },
   )
 
-  // 5) Backed-light pairing (paint-order + element-kind semantics): an
-  //    opaque near-white SHAPE immediately followed by painted elements acts
-  //    as a text/equation BACKDROP and co-adapts with them; an isolated
-  //    light mark stays literal. Scan the tag stream, hold each candidate as
-  //    pending until the next painted element resolves it.
+  // 5) Backed-light pairing (paint-order semantics): an opaque light SHAPE
+  //    immediately followed by painted elements co-adapts with them; an
+  //    isolated light mark stays literal. Gradient interiors are skipped
+  //    (stops live outside role semantics).
   {
     let pending: { start: number; end: number; raw: string } | undefined
     let gradDepth = 0
@@ -693,14 +742,12 @@ export function applySvgTheme(input: string): string {
         tag.includes('currentColor') || (!!anyPaint?.[1] && !!parseColorValue(anyPaint[1]))
 
       if (isShape && fillRgb && isOpaque(fillRgb) && isLightSurfaceRGB(fillRgb)) {
-        // A new near-white surface supersedes an unresolved pending one.
         pending = { start: m.index!, end: m.index! + tag.length, raw: fillMatch![1]! }
         continue
       }
 
       if (!painted) continue
       if (pending && !isShape) {
-        // Painted content over the held surface -> backdrop confirmed.
         confirms.push(pending)
         pending = undefined
         continue
@@ -719,14 +766,14 @@ export function applySvgTheme(input: string): string {
     }
   }
 
-  // 7) Theme-aware paints become inline light-dark() values. Element-wise
+  // 6) Theme-aware paints become inline light-dark() values. Element-wise
   //    rewriting avoids <style>/<script>-style tags entirely -- markdown
   //    content is compiled as a client Vue template where those tags are
   //    hard compile errors (ignoreSideEffectTags) and would break docs:dev.
   //
-  //    Excluded subtrees: gradient defs (continuity), masks/filters (their
-  //    arithmetic depends on exact colors), clipPaths (no visible paint),
-  //    scripts. <style> blocks get their CSS text transformed separately.
+  //    Excluded subtrees: gradient defs (continuity), masks/filters (exact-
+  //    color arithmetic), clipPaths (no visible paint), scripts. <style>
+  //    blocks get their CSS text transformed separately.
   const EXCLUDED = new Set([
     'linearGradient',
     'radialGradient',
@@ -736,7 +783,8 @@ export function applySvgTheme(input: string): string {
     'script',
     'style',
   ])
-  const edits: Array<{ start: number; end: number; text: string }> = []
+  type Edit = { start: number; end: number; text: string }
+  const edits: Edit[] = []
   const stack: string[] = []
   for (const m of svg.matchAll(/<(\/?)([a-zA-Z][^>\s/]*)([^<>]*)>/g)) {
     const full = m[0]
@@ -774,8 +822,8 @@ export function applySvgTheme(input: string): string {
     svg = svg.slice(0, e.start) + e.text + svg.slice(e.end)
   }
 
-  // 8) Geometry pinning runs LAST: it reverts covering ink to literal black,
-  //    and any earlier pass must not reinterpret that decision.
+  // 7) Geometry pinning runs LAST: it reverts covering ink to literal black,
+  //    and nothing after it may reinterpret that decision.
   svg = pinInkOverLiteralSurfaces(svg)
   return svg
 }
