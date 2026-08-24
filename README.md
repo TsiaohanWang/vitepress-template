@@ -11,7 +11,7 @@
 - **Iconify 图标**：emoji 风格语法 `::set:name::`，构建时内联 SVG，无运行时 API 请求
 - **自定义容器与主题色**：10 种主题化容器（内置 5 种 + 扩展 5 种），Obsidian 风格配色与 `gravity-ui` 标题图标；行内代码与链接颜色跟随正文
 - **等宽字体**：自托管 JetBrains Mono（Fontsource 打包），覆盖代码块/行内代码/kbd，离线可用
-- **Typst 图表**：```` ```typst ```` 围栏构建期编译为内联 SVG，`CeTZ` / `Alchemist` / `Lilaq` / `Fletcher` / `Tiaoma` / `Physica` / `Zap` 实测可用；长短围栏区分渲染与源码展示；明暗自适应配色可开关
+- **Typst 图表**：```` ```typst ```` 围栏构建期编译为内联 SVG，`CeTZ` / `Alchemist` / `Lilaq` / `Fletcher` / `Tiaoma` / `Physica` / `Zap` / `Atomic` 实测可用；长短围栏区分渲染与源码展示；明暗自适应配色可开关
 - **中文搜索**：本地全文搜索内置 `Intl.Segmenter` CJK 分词器，中文短语可直接命中
 - **SSR 保证**：公式与图标均在 Markdown 编译阶段输出为静态 HTML，页面无客户端数学/图标 JS
 - **CI 就绪**：GitHub Actions 执行 vue-tsc 类型检查 + `ICONIFY_STRICT=1` 硬校验构建
@@ -65,7 +65,7 @@ pnpm typecheck      # vue-tsc 类型检查
 │  └─ examples/           # Examples section，对应 /examples/...
 │     ├─ markdown-examples.md
 │     ├─ api-examples.md      # 运行时 API 与主题扩展
-│     └─ typst-diagrams.md    # Typst 图表渲染效果集（14 例）
+│     └─ typst-diagrams.md    # Typst 图表渲染效果集（15 例）
 ├─ nav.json               # 顶部导航配置
 ├─ sidebar.json           # 侧边栏配置
 ├─ package.json           # ESM（type: module）+ docs:* / typecheck 脚本 + engines/packageManager
@@ -138,7 +138,7 @@ JSON 无法携带类型，`config.mts` 中已做类型断言（`nav as DefaultTh
 | 自定义容器 | 10 种 Obsidian 风格主题色容器 + `gravity-ui` 标题图标 |
 | 等宽字体 | 自托管 JetBrains Mono，离线可用 |
 | 文章元数据 | frontmatter 驱动 `DocHeader`，`title` / `keywords` 构建期强校验 |
-| Typst 图表 | ```typst 围栏构建期编译为内联 SVG（CeTZ / Alchemist / Lilaq / Fletcher / Tiaoma / Physica / Zap 实测可用），明暗自适应可开关 |
+| Typst 图表 | ```typst 围栏构建期编译为内联 SVG（CeTZ / Alchemist / Lilaq / Fletcher / Tiaoma / Physica / Zap / Atomic 实测可用），明暗自适应可开关 |
 | 中文搜索 | 本地搜索内置 Intl.Segmenter CJK 分词器 |
 | 品牌色 | `#F74C00` 明暗双套变量 |
 | 花括号防护 | 正文 `{{ }}` 自动转义，杜绝 Vue 插值误伤 |

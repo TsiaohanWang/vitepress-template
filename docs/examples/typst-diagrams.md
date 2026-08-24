@@ -57,7 +57,7 @@ keywords:
 ```
 
 
-官方 CeTZ-Plot gallery 分组柱状图（`cetz` 0.5.2 + `cetz-plot` 0.1.4；白色图例面板将触发衬板配对）：
+官方 CeTZ-Plot gallery 分组柱状图（`cetz` 0.5.2 + `cetz-plot` 0.1.4；白底图例卡与柱体之间隔有其他图层，衬板配对不生效——暗色下保持白卡黑字的原始卡片形态）：
 
 ```typst
 #import "@preview/cetz:0.5.2": canvas, draw
@@ -373,3 +373,17 @@ $ curl (grad f), tensor(T, -mu, +nu), pdv(f, x, y, [1, 2]) $
 })
 
 ```
+
+## Atomic
+
+原子结构图（Bohr 模型，官方 README 示例：铜原子显式电子层排布 + 铁原子自动填充轨道）：
+
+```typst
+#import "@preview/atomic:1.0.0": atom
+#set page(width: auto, height: auto, margin: 5pt)
+
+#atom(29, 64, "Cu", (1, 8, 18, 2))
+#h(12pt)
+#atom(26, 56, "Fe", 26)
+```
+
