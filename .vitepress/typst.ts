@@ -353,18 +353,201 @@ export function applySvgTheme(input: string): string {
     pending = undefined
   }
 
-  // Rewrite confirmed backdrops from their end positions backwards so earlier
-  // offsets stay valid.
-  for (const { start, end, hex } of confirmed.reverse()) {
-    const segment = svg.slice(start, end)
-    const rewritten = segment.replace(
-      new RegExp(`(\\s)fill="${hex}"`),
-      `$1style="fill:${adaptValue(hex, true)};"`,
-    )
-    svg = svg.slice(0, start) + rewritten + svg.slice(end)
+// Rewrite confirmed backdrops from their end positions backwards so earlier
+// offsets stay valid.
+for (const { start, end, hex } of confirmed.reverse()) {
+  const segment = svg.slice(start, end)
+  const rewritten = segment.replace(
+    new RegExp(`(\\s)fill="${hex}"`),
+    `$1style="fill:${adaptValue(hex, true)};"`,
+  )
+  svg = svg.slice(0, start) + rewritten + svg.slice(end)
+}
+
+// ---------------------------------------------------------------------------
+// Geometry pass: ink pinned over PRESERVED literal whites.
+//
+// Backdrops whose ink was too far away in paint order to be caught by the
+// pairing scan stay literal (e.g. chart legends drawn early, labels much
+// later). A preserved white surface forces DARK ink -- letting such ink
+// follow currentColor would brighten it into an unreadable smear on the
+// untouched white panel. Every currentColor-painted element whose center
+// lies inside a preserved surface's bounding box is therefore reverted to
+// the original black. Mid-tone surfaces (gradients) tolerate both ink
+// polarities, so their covering text intentionally keeps adapting.
+// ---------------------------------------------------------------------------
+
+interface Box {
+  x0: number
+  y0: number
+  x1: number
+  y1: number
+}
+
+function pathBBox(d: string): Box | undefined {
+  const tokens = d.match(/[MmLlHhVvCcSsQqTtAaZz]|-?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?/g)
+  if (!tokens || tokens.length === 0) return undefined
+  const arity: Record<string, number> = {
+    M: 2, L: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, T: 2, A: 7,
+    m: 2, l: 2, h: 1, v: 1, c: 6, s: 4, q: 4, t: 2, a: 7,
+  }
+  let cx = 0
+  let cy = 0
+  let sx = 0
+  let sy = 0
+  let i = 0
+  let cmd = ''
+  let done = false
+  const xs: number[] = []
+  const ys: number[] = []
+  while (i < tokens.length && !done) {
+    const tok = tokens[i]!
+    if (/^[A-Za-z]$/.test(tok)) {
+      cmd = tok
+      i++
+      if (cmd === 'Z' || cmd === 'z') {
+        cx = sx
+        cy = sy
+        continue
+      }
+    }
+    const n = arity[cmd]
+    if (!n) break
+    const args: number[] = []
+    for (let a = 0; a < n; a++) {
+      const v = tokens[i]
+      if (v === undefined || /^[A-Za-z]$/.test(v)) break
+      args.push(parseFloat(v))
+      i++
+    }
+    if (args.length < n) break
+    const rel = cmd >= 'a' && cmd <= 'z'
+    switch (cmd.toLowerCase()) {
+      case 'm':
+      case 'l': {
+        const x = rel ? cx + args[0]! : args[0]!
+        const y = rel ? cy + args[1]! : args[1]!
+        cx = x
+        cy = y
+        if (cmd === 'm') {
+          sx = x
+          sy = y
+        }
+        break
+      }
+      case 'h':
+        cx = rel ? cx + args[0]! : args[0]!
+        break
+      case 'v':
+        cy = rel ? cy + args[0]! : args[0]!
+        break
+      case 'c':
+      case 's':
+      case 'q':
+      case 't':
+        cx += rel ? args[args.length - 2]! : 0
+        cy += rel ? args[args.length - 1]! : 0
+        if (!rel) {
+          cx = args[args.length - 2]!
+          cy = args[args.length - 1]!
+        }
+        break
+      case 'a':
+        cx += rel ? args[args.length - 2]! : 0
+        cy += rel ? args[args.length - 1]! : 0
+        if (!rel) {
+          cx = args[args.length - 2]!
+          cy = args[args.length - 1]!
+        }
+        break
+    }
+    if (Number.isFinite(cx) && Number.isFinite(cy)) {
+      xs.push(cx)
+      ys.push(cy)
+    }
+  }
+  if (xs.length === 0) return undefined
+  return {
+    x0: Math.min(...xs),
+    y0: Math.min(...ys),
+    x1: Math.max(...xs),
+    y1: Math.max(...ys),
+  }
+}
+
+const PINNED_BLACK = '#000000'
+
+function pinInkOverLiteralWhites(svg: string): string {
+  const vb = /viewBox="([\d.eE+-]+) ([\d.eE+-]+) ([\d.eE+-]+) ([\d.eE+-]+)"/.exec(svg)
+  const minArea = vb
+    ? 0.002 * parseFloat(vb[3]!) * parseFloat(vb[4]!)
+    : 0 // noise floor: specks/markers never become pinning zones
+
+  const surfaces: Box[] = []
+  const inkSpans: Array<{ start: number; end: number }> = []
+
+  const tagRe = /<[a-zA-Z!/][^>]*>/g
+  for (const m of svg.matchAll(tagRe)) {
+    const tag = m[0]
+    if (tag.startsWith('</')) continue
+
+    const cls = /class="([^"]*)"/.exec(tag)?.[1] ?? ''
+    const fillMatch = /\bfill="(#[0-9a-fA-F]{3,8})"/.exec(tag)
+    const dMatch = /\bd="([^"]+)"/.exec(tag)
+
+    // Preserved literal near-white OPAQUE shape -> protected surface.
+    // Translucent whites are excluded: they adapt via color-mix alongside
+    // their covering ink, so nothing may be pinned against them.
+    if (
+      cls.includes('typst-shape') &&
+      fillMatch?.[1] &&
+      fillMatch[1].length <= 7 &&
+      isNearWhite(fillMatch[1]) &&
+      dMatch?.[1]
+    ) {
+      const box = pathBBox(dMatch[1])
+      if (box && (box.x1 - box.x0) * (box.y1 - box.y0) >= minArea) surfaces.push(box)
+    }
+
+    // Ink candidates: any element carrying currentColor paints.
+    if (tag.includes('currentColor') && m.index !== undefined) {
+      const d = dMatch?.[1]
+      const usePos = /\bx="([\d.eE+-]+)".*?\by="([\d.eE+-]+)"/.exec(tag)
+      let box: Box | undefined
+      if (d) box = pathBBox(d)
+      else if (usePos) {
+        const ux = parseFloat(usePos[1]!)
+        const uy = parseFloat(usePos[2]!)
+        box = { x0: ux, y0: uy, x1: ux + 1, y1: uy + 1 }
+      }
+      if (box && surfaces.some((s) => {
+        const mx = (box!.x0 + box!.x1) / 2
+        const my = (box!.y0 + box!.y1) / 2
+        return mx >= s.x0 && mx <= s.x1 && my >= s.y0 && my <= s.y1
+      })) {
+        inkSpans.push({ start: m.index, end: m.index + tag.length })
+      }
+    }
   }
 
-  // 6) Theme-aware paints become inline light-dark() values. Element-wise
+  // Revert from the end backwards so earlier offsets stay valid.
+  for (const span of inkSpans.reverse()) {
+    const seg = svg.slice(span.start, span.end)
+    const reverted = seg
+      .replaceAll('fill="currentColor"', `fill="${PINNED_BLACK}"`)
+      .replaceAll('stroke="currentColor"', `stroke="${PINNED_BLACK}"`)
+      .replaceAll('fill:currentColor', `fill:${PINNED_BLACK}`)
+      .replaceAll('stroke:currentColor', `stroke:${PINNED_BLACK}`)
+    svg = svg.slice(0, span.start) + reverted + svg.slice(span.end)
+  }
+  return svg
+}
+
+  // 6) Geometry pass: pin ink over preserved literal whites (see the long
+  //    comment above `pinInkOverLiteralWhites`).
+  svg = pinInkOverLiteralWhites(svg)
+
+  // 7) Theme-aware paints become inline light-dark() values. Element-wise
   //    rewriting avoids <style>/<script>-style tags entirely -- markdown
   //    content is compiled as a client Vue template where those tags are
   //    hard compile errors (ignoreSideEffectTags) and would break docs:dev.
