@@ -8,6 +8,11 @@ import { inlineSvgRender } from './iconify.ts'
 import { mustacheGuard } from './markdown-guards.ts'
 import { typstFencePlugin } from './typst.ts'
 
+// Theme-adaptive Typst figures: ink follows the document text color and, in
+// dark mode, whites follow the page background (see typst.ts + custom.css).
+// Flip to false to emit the compiler's fixed black-on-white palette.
+const typstThemeAdaptive = true
+
 const nav = navJson as DefaultTheme.NavItem[]
 const sidebar = sidebarJson as Record<string, DefaultTheme.SidebarItem[]>
 
@@ -62,7 +67,7 @@ export default defineConfig({
       md.use(mustacheGuard)
 
       // Compile ```typst fences to inline SVG at build time (typst.ts).
-      md.use(typstFencePlugin)
+      md.use(typstFencePlugin, { themeAdaptive: typstThemeAdaptive })
     },
   },
 

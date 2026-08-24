@@ -17,7 +17,7 @@ features:
   - title: 配置与内容分离
     details: 所有 VitePress 配置集中在 .vitepress/，正文只保留纯 Markdown（docs/），二者互不干扰。
   - title: 全程 TypeScript
-    details: .mts 配置 + .ts 主题代码，配备 tsc --noEmit 类型检查与 vitepress/client 类型支持。
+    details: .mts 配置 + .ts 主题代码 + .vue 组件，pnpm typecheck（vue-tsc）全量类型检查。
   - title: 构建时数学公式
     details: 官方 markdown.math 方案（markdown-it-mathjax3），公式在构建时渲染为静态 HTML，无运行时依赖。
   - title: Iconify 图标语法

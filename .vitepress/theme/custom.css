@@ -143,10 +143,19 @@ html:not(.dark) {
   background-color: rgb(var(--cb-rgb) / 0.16);
 }
 
-/* Typst figures rendered at build time (inline SVG, SSR-safe). */
+/* Typst figures rendered at build time (inline SVG, SSR-safe). Dark-mode
+   adaptation lives in typst.ts (applySvgTheme): adapted paints become inline
+   light-dark() values, resolved against the color-scheme declared here.
+   Scoped to figures on purpose -- site-wide color-scheme would also switch
+   native form controls. */
 .typst-figure {
   margin: 16px 0;
   text-align: center;
+  color-scheme: light;
+}
+
+.dark .typst-figure {
+  color-scheme: dark;
 }
 
 .typst-figure svg {
