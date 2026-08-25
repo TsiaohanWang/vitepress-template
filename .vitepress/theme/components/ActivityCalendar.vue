@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useData } from 'vitepress'
 
 /**
@@ -98,13 +98,44 @@ const weeks = computed<GridDay[][]>(() => {
   return out
 })
 
-const width = LEFT + weeks.value.length * PITCH - GAP
+// Responsive strategy: cells keep their NATURAL size everywhere. When the
+// container cannot fit all 53 week columns, the OLDEST columns are dropped
+// from the left (the grid always shows the most recent weeks) instead of
+// shrinking the cells or scrolling. Wide containers scale up to fill.
+// SSR renders the full grid; the measurement below only ever trims after
+// mount, so hydration stays deterministic.
+const scrollEl = ref<HTMLElement | null>(null)
+const innerWidth = ref(0)
+let observer: ResizeObserver | undefined
+
+onMounted(() => {
+  if (!scrollEl.value) return
+  observer = new ResizeObserver((entries) => {
+    innerWidth.value = entries[0]?.contentRect.width ?? 0
+  })
+  observer.observe(scrollEl.value)
+})
+
+onUnmounted(() => observer?.disconnect())
+
+const naturalWidth = LEFT + weeks.value.length * PITCH - GAP
+const fillsContainer = computed(() => innerWidth.value === 0 || innerWidth.value >= naturalWidth)
+
+/** Week columns kept after left-trimming (most recent N). */
+const shownWeeks = computed<GridDay[][]>(() => {
+  if (fillsContainer.value) return weeks.value
+  const fit = Math.floor((innerWidth.value - LEFT + GAP) / PITCH)
+  return weeks.value.slice(-Math.max(4, fit))
+})
+
+const width = computed(() => LEFT + shownWeeks.value.length * PITCH - GAP)
 const height = TOP + 7 * PITCH - GAP
+const gridCssWidth = computed(() => (fillsContainer.value ? '100%' : `${width.value}px`))
 
 /** One label where a new month starts, skipping crowded neighbors. */
 const monthLabels = computed(() => {
   const labels: Array<{ x: number; text: string }> = []
-  weeks.value.forEach((week, index) => {
+  shownWeeks.value.forEach((week, index) => {
     const first = week[0]
     if (!first) return
     const text = monthOf(first.date)
@@ -118,16 +149,25 @@ const monthLabels = computed(() => {
   )
 })
 
-const tip = reactive({ visible: false, x: 0, y: 0, text: '' })
+const tip = reactive({ visible: false, x: 0, y: 0, flip: false, text: '' })
 
 function showTip(event: MouseEvent, day: GridDay) {
   const host = (event.currentTarget as SVGRectElement).ownerSVGElement?.parentElement
   const svgRect = host?.getBoundingClientRect()
-  if (!svgRect) return
+  if (!svgRect || !host) return
   const countText = day.count > 0 ? `${day.count} 次提交` : '没有提交'
   tip.text = `${countText} · ${formatTooltipDate(day.date)}`
-  tip.x = event.clientX - svgRect.left
-  tip.y = event.clientY - svgRect.top
+  // The wrapper scrolls horizontally on narrow screens; the tooltip lives in
+  // scrolled content coordinates, clamped to the VISIBLE window so the
+  // overflow clip can never cut it off. Near the top edge it flips below
+  // the cursor instead of clipping above.
+  const rawX = event.clientX - svgRect.left + host.scrollLeft
+  const rawY = event.clientY - svgRect.top + host.scrollTop
+  // Tooltip width runs ~170px with a full date string; clamp with margin.
+  const half = 90
+  tip.x = Math.min(Math.max(rawX, host.scrollLeft + half), host.scrollLeft + host.clientWidth - half)
+  tip.y = rawY
+  tip.flip = rawY - 44 < host.scrollTop
   tip.visible = true
 }
 
@@ -138,8 +178,10 @@ function hideTip() {
 
 <template>
   <div class="activity-calendar">
+    <div ref="scrollEl" class="ac-scroll">
     <svg
       class="ac-grid"
+      :style="{ width: gridCssWidth }"
       :viewBox="`0 0 ${width} ${height}`"
       role="img"
       aria-label="项目提交活动热力图"
@@ -168,7 +210,7 @@ function hideTip() {
       </text>
 
       <!-- Cells -->
-      <template v-for="(week, wi) in weeks" :key="`c${wi}`">
+      <template v-for="(week, wi) in shownWeeks" :key="week[0]?.date ?? `c${wi}`">
         <rect
           v-for="(day, di) in week"
           :key="day.date"
@@ -190,9 +232,11 @@ function hideTip() {
     <div
       v-show="tip.visible"
       class="ac-tip"
+      :class="{ 'ac-tip-flip': tip.flip }"
       :style="{ left: `${tip.x}px`, top: `${tip.y}px` }"
     >
       {{ tip.text }}
+    </div>
     </div>
   </div>
 </template>
@@ -210,9 +254,14 @@ function hideTip() {
 
 /* Scale the whole grid to the container width; the viewBox keeps the
    aspect ratio so cells stay square at any size. */
+.ac-scroll {
+  position: relative;
+}
+
+/* Cells keep their natural size; the svg fills wide containers and lets the
+   column trimming handle narrow ones (see shownWeeks). */
 .ac-grid {
   display: block;
-  width: 100%;
   height: auto;
 }
 
@@ -241,6 +290,13 @@ function hideTip() {
 .ac-tip {
   position: absolute;
   transform: translate(-50%, calc(-100% - 8px));
+}
+
+.ac-tip-flip {
+  transform: translate(-50%, 14px);
+}
+
+.ac-tip, .ac-tip-flip {
   padding: 5px 10px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
