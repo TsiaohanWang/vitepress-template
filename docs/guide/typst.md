@@ -18,7 +18,7 @@ keywords:
 
 ## 包管理与缓存
 
-- `@preview/*` 包（`cetz` / `alchemist` / `lilaq` / `fletcher` / `tiaoma` / `physica` / `zap` / `atomic` 等）首次使用时自动下载至 `~/.cache/typst/packages`；CI 需允许该网络访问，或预先缓存（本仓库 CI 已配置该目录缓存）
+- `@preview/*` 包（`cetz` / `alchemist` / `lilaq` / `fletcher` / `tiaoma` / `physica` / `zap` / `atomic` / `timeliney` 等）首次使用时自动下载至 `~/.cache/typst/packages`；CI 需允许该网络访问，或预先缓存（本仓库 CI 已配置该目录缓存）
 - 已编译结果按「**编译器版本 + 源码内容**」哈希缓存在 `.vitepress/cache/typst-svg/`（已 gitignore）：重复构建零开销，升级 `@myriaddreamin/typst-ts-node-compiler` 后旧缓存自动整体失效并全部重编译，无需手动清理；删除该目录亦可强制重编译
 
 ## 失败行为
@@ -167,4 +167,4 @@ $ e^(i pi) + 1 = 0 $
 
 ## 实现位置
 
-实现见 `.vitepress/typst.ts`：markdown-it fence 渲染器覆写 + 带缓存的编译封装。站点示例页 [Typst 图表示例](/examples/typst-diagrams) 含 `cetz`（官方 gallery `karls-picture`）/ `alchemist` / `lilaq` / `fletcher` / `tiaoma` / `physica` / `zap` / `atomic` 十六例。
+实现见 `.vitepress/typst.ts`：markdown-it fence 渲染器覆写 + 带缓存的编译封装。站点示例页 [Typst 图表示例](/examples/typst-diagrams) 按库分节展示 `cetz`（含 `cetz-plot`）/ `alchemist` / `lilaq` / `fletcher` / `tiaoma` / `physica` / `zap` / `atomic` / `timeliney` 九组示例。

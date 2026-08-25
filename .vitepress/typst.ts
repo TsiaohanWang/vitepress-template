@@ -223,7 +223,7 @@ const NAMED_COLORS: ReadonlyMap<string, RGBa> = (() => {
     'floralwhite fffaf0 forestgreen 228b22 fuchsia ff00ff gainsboro dcdcdc ' +
     'ghostwhite f8f8ff gold ffd700 goldenrod daa520 gray 808080 green 008000 ' +
     'greenyellow adff2f grey 808080 honeydew f0fff0 hotpink ff69b4 indianred cd5c5c ' +
-    'indigo 4b0082 ivory fffff0 khaki f0e68c lavender e6e6fa lawngreen 7cfc00 ' +
+    'indigo 4b0082 ivory fffff0 khaki f0e68c lavender e6e6fa lavenderblush fff0f5 lawngreen 7cfc00 ' +
     'lemonchiffon fffacd lightblue add8e6 lightcoral f08080 lightcyan e0ffff ' +
     'lightgoldenrodyellow fafad2 lightgray d3d3d3 lightgreen 90ee90 lightgrey d3d3d3 ' +
     'lightpink ffb6c1 lightsalmon ffa07a lightseagreen 20b2aa lightskyblue 87cefa ' +

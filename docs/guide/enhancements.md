@@ -164,7 +164,7 @@ keywords:
 
 - 校验在 `config.mts` 的 `transformPageData` 中执行：非首页内容页缺失 `title` 或 `keywords` 时**构建直接失败**，错误信息指明文件与缺失字段；归一化逻辑位于 `.vitepress/frontmatter.ts`，组件与构建校验共用同一实现
 - `layout: home` 的首页不受校验约束
-- 作者/日期/标签自带 `gravity-ui` 图标（CSS mask，SSR 友好）；样式位于组件的 scoped style
+- 作者/日期/标签自带内嵌 SVG 图标（CSS mask 实现，SSR 友好）；样式位于组件的 scoped style
 - **写作约定**：正文不要再手写一级标题（`# h1`），页面主标题由 DocHeader 从 frontmatter 渲染，重复会出现两个 h1
 
 组件的数据消费方式详见 [运行时 API 与主题扩展](/examples/api-examples)。

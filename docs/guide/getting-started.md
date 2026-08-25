@@ -64,4 +64,4 @@ sidebar.json    侧边栏（按路由前缀映射）
 
 构建产物为纯静态文件（`.vitepress/dist`），可部署至 Netlify / Vercel / GitHub Pages / Nginx 等。启用 `cleanUrls` 时服务端需将 `/path` 回退到 `/path.html`（各平台配置见官方 [Deploy Guide](https://vitepress.dev/guide/deploy)）。
 
-CI 已内置（`.github/workflows/ci.yml`）：类型检查 + `ICONIFY_STRICT=1` 硬校验构建，可直接作为 GitHub Pages / Vercel 的构建流程基础。
+CI 已内置（`.github/workflows/ci.yml`）：类型检查、单元测试与 `ICONIFY_STRICT=1` 硬校验构建，可直接作为 GitHub Pages / Vercel 的构建流程基础。

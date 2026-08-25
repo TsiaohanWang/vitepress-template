@@ -69,11 +69,12 @@ export default {
 
 ## enhanceApp()
 
-`.vitepress/theme/index.ts` 中预留的扩展点，用于注册全局组件、自定义指令或挂载插件（如站点点统计）：
+用于注册全局组件、自定义指令或挂载插件的扩展点——本模板即用它把 `<ActivityCalendar>` 注册为全局组件（任意页面可直接使用，无需 import）：
 
 ```ts
-enhanceApp({ app, router, siteData }) {
-  // app.component('MyGlobalComponent', MyGlobalComponent)
+// .vitepress/theme/index.ts
+enhanceApp({ app }) {
+  app.component('ActivityCalendar', ActivityCalendar)
 },
 ```
 
@@ -95,5 +96,5 @@ const router = useRouter()
 
 ## 下一步
 
-- 完整源码：`.vitepress/theme/index.ts` 与 `theme/components/DocHeader.vue`
+- 完整源码：`.vitepress/theme/index.ts` 与 `theme/components/`（DocHeader / ActivityCalendar）
 - 写作侧能力对应关系见[内置增强](/guide/enhancements)

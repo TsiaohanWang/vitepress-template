@@ -11,7 +11,8 @@
 - **Iconify 图标**：emoji 风格语法 `::set:name::`，构建时内联 SVG，无运行时 API 请求
 - **自定义容器与主题色**：10 种主题化容器（内置 5 种 + 扩展 5 种），Obsidian 风格配色与 `gravity-ui` 标题图标；行内代码与链接颜色跟随正文
 - **等宽字体**：自托管 JetBrains Mono（Fontsource 打包），覆盖代码块/行内代码/kbd，离线可用
-- **Typst 图表**：```` ```typst ```` 围栏构建期编译为内联 SVG，`CeTZ` / `Alchemist` / `Lilaq` / `Fletcher` / `Tiaoma` / `Physica` / `Zap` / `Atomic` 实测可用；长短围栏区分渲染与源码展示；明暗自适应配色可开关
+- **Typst 图表**：```` ```typst ```` 围栏构建期编译为内联 SVG，`CeTZ` / `Alchemist` / `Lilaq` / `Fletcher` / `Tiaoma` / `Physica` / `Zap` / `Atomic` / `Timeliney` 实测可用；长短围栏区分渲染与源码展示；明暗自适应配色可开关
+- **提交活动日历**：全局 `<ActivityCalendar />` 组件构建期读取仓库 git 历史，渲染 GitHub 风格提交热力图（site/page 双粒度），数据注入页面负载、零运行时请求
 - **中文搜索**：本地全文搜索内置 `Intl.Segmenter` CJK 分词器，中文短语可直接命中
 - **SSR 保证**：公式与图标均在 Markdown 编译阶段输出为静态 HTML，页面无客户端数学/图标 JS
 - **单元测试**：vitest 覆盖图标渲染器/花括号防护/keywords 归一化/Typst 主题适配引擎等纯函数与编译管线
@@ -41,7 +42,7 @@ pnpm test           # vitest 单元测试
 
 ```
 .
-├─ .github/workflows/ci.yml  # CI：vue-tsc 类型检查 + ICONIFY_STRICT=1 构建
+├─ .github/workflows/ci.yml  # CI：vue-tsc 类型检查 + vitest 单测 + ICONIFY_STRICT=1 构建
 ├─ .vitepress/            # 配置层（VitePress 专属，不放正文）
 │  ├─ config.mts          # 站点配置入口（srcDir 指向 docs/，含 CJK 搜索分词器）
 │  ├─ frontmatter.ts      # keywords 归一化（构建校验与组件共用）
@@ -51,7 +52,8 @@ pnpm test           # vitest 单元测试
 │  ├─ theme/
 │  │  ├─ index.ts         # 主题入口：JetBrains Mono 字重 + DocHeader 插槽 + custom.css
 │  │  ├─ components/
-│  │  │  └─ DocHeader.vue # frontmatter 驱动的文章头部组件（标题/作者/日期/标签）
+│  │  │  ├─ DocHeader.vue        # frontmatter 驱动的文章头部组件（标题/作者/日期/标签）
+│  │  │  └─ ActivityCalendar.vue # GitHub 风格 git 提交活动热力图组件
 │  │  └─ custom.css       # 自定义容器配色与标题图标（Obsidian 风格）
 │  ├─ cache/              # 开发缓存（含 typst-svg 编译缓存，已 gitignore）
 │  └─ dist/               # 构建产物（已 gitignore）
@@ -142,7 +144,8 @@ JSON 无法携带类型，`config.mts` 中已做类型断言（`nav as DefaultTh
 | 自定义容器 | 10 种 Obsidian 风格主题色容器 + `gravity-ui` 标题图标 |
 | 等宽字体 | 自托管 JetBrains Mono，离线可用 |
 | 文章元数据 | frontmatter 驱动 `DocHeader`，`title` / `keywords` 构建期强校验 |
-| Typst 图表 | ```typst 围栏构建期编译为内联 SVG（CeTZ / Alchemist / Lilaq / Fletcher / Tiaoma / Physica / Zap / Atomic 实测可用），明暗自适应可开关 |
+| Typst 图表 | ```typst 围栏构建期编译为内联 SVG（CeTZ / Alchemist / Lilaq / Fletcher / Tiaoma / Physica / Zap / Atomic / Timeliney 实测可用），明暗自适应可开关 |
+| 提交活动日历 | `<ActivityCalendar />` 构建期聚合 git 历史，site/page 双粒度热力图 |
 | 中文搜索 | 本地搜索内置 Intl.Segmenter CJK 分词器 |
 | 品牌色 | `#F74C00` 明暗双套变量 |
 | 花括号防护 | 正文 `{{ }}` 自动转义，杜绝 Vue 插值误伤 |
