@@ -10,13 +10,31 @@ keywords:
   - Tiaoma
   - Physica
   - Zap
+  - Atomic
+  - Timeliney
 ---
 
 本页集中展示 ```typst 围栏的构建期渲染结果：代码经 typst.ts 编译为自包含内联 SVG，无客户端 JS、无运行时请求；所有图形均针对明暗主题做了自适应处理（机制与围栏层级约定见 [Typst 图表](/guide/typst)）。
 
+九个库的快速定位如下表，各节再展开介绍功能用途与本页示例：
+
+| 库 | 类别 | 功能用途 |
+| --- | --- | --- |
+| [CeTZ](https://typst.app/universe/package/cetz/) | 通用绘图 | TikZ 风格画布引擎，自由绘制任意示意图；`cetz-plot` 扩展提供统计图表 |
+| [Alchemist](https://typst.app/universe/package/alchemist/) | 化学 | 骨架式化学结构：碳环、化学键、立体楔形与反应关系 |
+| [Lilaq](https://typst.app/universe/package/lilaq/) | 科学绘图 | 轴系完备的出版级统计图表（折线 / 柱状 / 函数曲线等） |
+| [Fletcher](https://typst.app/universe/package/fletcher/) | 结构图 | 节点—箭头图表：交换图、状态机、架构与流程图 |
+| [Tiaoma](https://typst.app/universe/package/tiaoma/) | 条码 | EAN-8 / EAN-13 商品条码与 QR 矩阵码 |
+| [Physica](https://typst.app/universe/package/physica/) | 物理记号 | 向量微积分、张量、狄拉克记号与时序波形图 |
+| [Zap](https://typst.app/universe/package/zap/) | 电工电子 | CircuiTikZ 风格的电路原理图 |
+| [Atomic](https://typst.app/universe/package/atomic/) | 物理 | Bohr 原子结构模型图 |
+| [Timeliney](https://typst.app/universe/package/timeliney/) | 项目管理 | 甘特图 / 项目时间线：任务组、里程碑、网格 |
+
 ## CeTZ
 
-通用绘图与科学图表库（左：单位圆三角函数；右：分组柱状图）：
+**通用二维绘图** —— Typst 生态中最接近 LaTeX TikZ 的画布式绘图引擎。核心是 `canvas` / `draw` 两层接口：坐标系与缩放、直线/圆弧/贝塞尔路径、矩形/圆/多边形等形状、箭头标记、角度与文字标注，配合 `set-style` 统一管理线宽、填充与标注风格——几乎任何自定义示意图都能从零逐点构造。官方扩展 [`cetz-plot`](https://typst.app/universe/package/cetz-plot/) 在同一画布上封装出柱状图、折线图、直方图等统计图表类型，适合教科书级数学插图与对布局有精确要求的自由绘图。
+
+本页示例：单位圆上的三角函数几何定义（角 α 与 sin/cos/tan 对应线段）；`cetz-plot` 分组柱状图 → [官方页面](https://typst.app/universe/package/cetz/)：
 
 ```typst
 #import "@preview/cetz:0.5.2": canvas, draw
@@ -90,7 +108,9 @@ keywords:
 
 ## Alchemist
 
-化学骨架结构式绘制库（着色化学键与立体楔形键示例）：
+**化学结构式** —— 以「骨架式」（skeletal formula）为范式的有机化学绘图包：`cycle` 绘制并嵌套碳环（含稠环拼接）、单/双/三键沿链行走、`cram-*` 系列表达立体化学楔形键、`fragment` 插入原子团、`branch` 挂接取代基，还可跨片段指定化学键的着色与加粗来表达反应关系。指令式 API 贴近手写结构式的思路，适合有机化学教学材料与论文插图。
+
+本页示例：稠环分子骨架（HO/NH/OH 取代基、红色双键与填充楔形立体键）；多片段间着色键连接的反应示意 → [官方页面](https://typst.app/universe/package/alchemist/)：
 
 ```typst
 #import "@preview/alchemist:0.2.0": *
@@ -167,7 +187,9 @@ keywords:
 
 ## Lilaq
 
-统计绘图库（双序列折线 + 函数曲线复合图，官方 quickstart 示例）：
+**科学统计图表** —— 面向科研出版的轴系绘图框架（官网 [lilaq.dev](https://lilaq.dev)）：以 `diagram` 为入口声明坐标系，内置刻度/子刻度、轴标题、旋转标签、图例定位与双 y 轴等出版级要素；折线/散点、柱状、函数曲线等序列类型可直接混排在同一张图中，样式高度可定制。适合实验数据成图与教学图表。
+
+本页示例：柏林气候双轴图（月降水柱状 + 气温折线）；官方 quickstart 的数据点序列与余弦函数曲线复合图 → [官方页面](https://typst.app/universe/package/lilaq/)：
 
 ```typst
 #import "@preview/lilaq:0.6.0" as lq
@@ -215,7 +237,9 @@ keywords:
 
 ## Fletcher
 
-节点-箭头图表库（ML 架构图与状态机示例）：
+**节点—箭头图表** —— 数学与计算机科学领域的连线图专用包：在坐标网格上放置节点（内置 house / hexagon 等异形与圆角矩形），用 `edge` 声明折线路径、弯折角度、虚线样式、箭头端型与标签位置，自动处理正交路由与避让。交换图、有限状态机、神经网络架构图与流程图都是其典型场景。
+
+本页示例：Transformer 编码器块架构图（多头注意力 / 前馈网络 / 归一化层）；文件读写状态机（自环与跨状态回边） → [官方页面](https://typst.app/universe/package/fletcher/)：
 
 ```typst
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
@@ -275,7 +299,9 @@ keywords:
 
 ## Tiaoma
 
-条码生成库（EAN-13 商品条码与 QR 码）：
+**条码生成** —— 直接输出印刷级条码的轻量工具包：按标准编码规则生成 EAN-8 / EAN-13 商品条码与 QR 矩阵码，纯矢量输出、任意缩放不失真。适合书籍封底、票据、名片等需要内嵌条码的排版场景。
+
+本页示例：EAN-13 商品条码（含人读数字）；指向 typst.app 的 QR 码 → [官方页面](https://typst.app/universe/package/tiaoma/)：
 
 ```typst
 #import "@preview/tiaoma:0.3.0"
@@ -298,7 +324,9 @@ keywords:
 
 ## Physica
 
-物理记号与时序图库（时钟波形与向量微积分记号）：
+**物理记号与时序图** —— 两块能力：其一是物理学排版记号体系——向量微积分算子（grad / div / curl / 拉普拉斯）、张量指标、偏导数简写、量子力学的狄拉克记号等，让公式书写贴近惯用的 physics 风格；其二是 `signals()` 时序波形图，以字符语言描述电平翻转即可绘制时钟、总线等数字信号波形。适合讲义、习题与硬件文档。
+
+本页示例：时钟与总线信号的时序波形；旋度恒等式、张量记号与混合偏导数 → [官方页面](https://typst.app/universe/package/physica/)：
 
 ```typst
 #import "@preview/physica:0.9.8": *
@@ -320,7 +348,9 @@ keywords:
 
 ## Zap
 
-电路原理图绘制库（运放电路与极简电阻电路示例）：
+**电路原理图** —— 设计灵感来自 CircuiTikZ 的电路绘制包：内置电阻/电位器、电容、电源、熔断器、BJT 三极管、运放、接地等常用元器件符号，`wire` / `swire` / `zwire` 三种走线助手覆盖直连、正交绕行与命名节点中继，电压电流标签随元件声明一并标注。适合电工电子课程讲义与硬件文档中的原理图。
+
+本页示例：电阻桥 + PNP 三极管 + 运放反馈网络的完整电路（含接地与等效电阻标注）；最小电阻支路演示 → [官方页面](https://typst.app/universe/package/zap/)：
 
 ```typst
 #import "@preview/zap:0.6.0" as zap
@@ -375,7 +405,9 @@ keywords:
 
 ## Atomic
 
-原子结构图绘制库（Bohr 模型：显式电子层与自动填充轨道两种用法）：
+**原子结构模型** —— 一行代码绘制 Bohr 行星模型图：给定质子数、质量数、元素符号即可生成带核标注的壳层电子结构图；电子排布既可用元组显式指定每层电子数，也可传入电子总数由包按壳层容量规则自动填充。适合化学 / 物理入门教材的原子插图。
+
+本页示例：Cu-64 显式四层排布 (1, 8, 18, 2)；Fe-56 自动填充 26 个电子 → [官方页面](https://typst.app/universe/package/atomic/)：
 
 ```typst
 #import "@preview/atomic:1.0.0": atom
@@ -392,10 +424,12 @@ keywords:
 
 ## Timeliney
 
-甘特图绘制库（双级表头、任务组、里程碑与网格）：
+**甘特图 / 项目时间线** —— 项目进度图表专用包：`headerline` 支持「年份 + 季度」这类两级分组表头，任务经 `taskgroup` / `task` 组织并可在进度条上直接标注负责人与完成度，`milestone` 以菱形里程碑加虚线引线标记关键节点，`show-grid` 打开背景网格辅助时间对齐；任务条的粗细、颜色与虚线样式完全可控。适合项目汇报与研究计划书。
+
+本页示例：2023–2024 双年季度表头下研究 / 开发 / 市场三组任务，以及会议演示与应用商店上线两个里程碑 → [官方页面](https://typst.app/universe/package/timeliney/)：
 
 ```typst
-<code>#set page(width: 17cm, height: auto, margin: 5pt)
+#set page(width: 17cm, height: auto, margin: 5pt)
 #import "@preview/timeliney:0.4.0"
 
 #timeliney.timeline(
