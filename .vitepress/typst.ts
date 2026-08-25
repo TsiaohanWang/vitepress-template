@@ -75,14 +75,24 @@ function writeCache(hash: string, svg: string): void {
   }
 }
 
-// Defense-in-depth sanitizer: drop <script> elements should a Typst package
-// or snippet ever emit them -- compiled figures ship as inline SVG straight
-// into the page DOM. Runs before the compile cache so sanitized markup is
-// what gets persisted (and re-served from cache stays clean).
+// Defense-in-depth sanitizer for markup that ships as inline SVG straight
+// into the page DOM:
+//   * <script> elements are dropped entirely;
+//   * on* event-handler attributes are dropped too -- an <svg onload=...>
+//     executes code without any script element being present.
+// Applied before the compile cache so sanitized markup is what gets
+// persisted (re-served cache stays clean), at the splice point where
+// embedded <image> payloads are decoded, and once more over the fully
+// unfolded tree -- sanitization must never depend on any single call site.
 const SCRIPT_ELEMENT_RE = /<script\b[^>]*>[\s\S]*?<\/script\s*>|<script\b[^>]*\/\s*>/gi
+// Event handlers are exactly the SVG/HTML attributes whose name starts with
+// "on"; no standard presentation attribute shares that prefix, so a bare
+// prefix match is precise enough for sanitizer duty. Quoted values are
+// consumed wholesale so a ">" inside them cannot truncate the match early.
+const EVENT_HANDLER_ATTR_RE = /\s+on[a-zA-Z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/g
 
-export function stripScripts(svg: string): string {
-  return svg.replace(SCRIPT_ELEMENT_RE, '')
+export function sanitizeSvg(svg: string): string {
+  return svg.replace(SCRIPT_ELEMENT_RE, '').replace(EVENT_HANDLER_ATTR_RE, '')
 }
 
 export interface TypstRenderResult {
@@ -437,11 +447,14 @@ function unfoldEmbeddedSvgImages(svg: string): string {
         /(?:xlink:href|href)="data:image\/svg\+xml;base64,([^"]+)"/.exec(rawAttrs)
       if (!payload?.[1]) return match
 
-      let inner = Buffer.from(payload[1], 'base64').toString('utf8')
-      inner = inner
-        .replace(/<\?xml[\s\S]*?\?>/g, '')
-        .replace(/<!DOCTYPE[^>]*>/g, '')
-        .trim()
+      // Decode -> strip XML prologue -> SANITIZE before splicing: embedded
+      // payloads join the page DOM as raw markup and would otherwise bypass
+      // every outer filter -- this is the security boundary, not a nicety.
+      let inner = sanitizeSvg(
+        Buffer.from(payload[1], 'base64').toString('utf8')
+          .replace(/<\?xml[\s\S]*?\?>/g, '')
+          .replace(/<!DOCTYPE[^>]*>/g, ''),
+      ).trim()
 
       // Merge scope discipline: parse ONLY the decoded root tag's own
       // attributes, then overlay the whitelisted geometry keys from the
@@ -907,7 +920,10 @@ export function pinAudit(svg: string): Array<Record<string, unknown>> {
 
 export function applySvgTheme(input: string): string {
   // 1) Embedded vector images first: their colors must join the pipeline.
-  let svg = unfoldEmbeddedSvgImages(input)
+  //    The unfolded result is re-sanitized as a whole -- unfolding splices
+  //    external markup into the tree, so "no scripts / no event handlers
+  //    reach the DOM" must hold on the OUTPUT side too, not just the input.
+  let svg = sanitizeSvg(unfoldEmbeddedSvgImages(input))
 
   // 2) Structural canvas detection: passthrough only for an AUTHORED opaque
   //    tint outside the light band (dark/tinted designs). `fill: none` or
@@ -1082,7 +1098,7 @@ export function renderTypst(source: string): TypstRenderResult {
     return { error: 'Typst compilation failed (see diagnostics above)' }
   }
 
-  svg = stripScripts(svg)
+  svg = sanitizeSvg(svg)
   writeCache(hash, svg)
   return { svg }
 }

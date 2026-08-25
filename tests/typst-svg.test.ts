@@ -4,7 +4,7 @@ import {
   compileCacheKey,
   parseColorValue,
   pinAudit,
-  stripScripts,
+  sanitizeSvg,
 } from '../.vitepress/typst.ts'
 
 function expectRGB(
@@ -141,26 +141,77 @@ describe('applySvgTheme', () => {
   })
 })
 
-describe('stripScripts', () => {
+describe('sanitizeSvg', () => {
   it('removes script elements with content', () => {
-    expect(stripScripts('<svg><script>alert(1)</script><rect/></svg>')).toBe(
+    expect(sanitizeSvg('<svg><script>alert(1)</script><rect/></svg>')).toBe(
       '<svg><rect/></svg>',
     )
   })
 
   it('removes self-closing script elements', () => {
-    expect(stripScripts('<svg><script src="x.js"/><rect/></svg>')).toBe(
+    expect(sanitizeSvg('<svg><script src="x.js"/><rect/></svg>')).toBe(
       '<svg><rect/></svg>',
     )
   })
 
   it('matches case-insensitively', () => {
-    expect(stripScripts('<svg><SCRIPT>x</SCRIPT></svg>')).toBe('<svg></svg>')
+    expect(sanitizeSvg('<svg><SCRIPT>x</SCRIPT></svg>')).toBe('<svg></svg>')
   })
 
-  it('leaves script-free markup untouched', () => {
+  it('removes double-quoted event handler attributes', () => {
+    expect(
+      sanitizeSvg('<svg onload="evil()"><rect width="10"/></svg>'),
+    ).toBe('<svg><rect width="10"/></svg>')
+  })
+
+  it('removes single-quoted and unquoted event handler values', () => {
+    expect(
+      sanitizeSvg("<animate onbegin='evil()' href='#x'/>"),
+    ).toBe("<animate href='#x'/>")
+    expect(sanitizeSvg('<rect onclick=evil()>')).toBe('<rect>')
+  })
+
+  it('keeps attributes that merely contain "on" inside the name', () => {
+    const svg = '<rect data-on-click="keep" font-on="keep"/>'
+    expect(sanitizeSvg(svg)).toBe(svg)
+  })
+
+  it('consumes quoted values wholesale (">" cannot truncate the match)', () => {
+    expect(sanitizeSvg('<a onshow="x>y" fill="#000"/>')).toBe(
+      '<a fill="#000"/>',
+    )
+  })
+
+  it('leaves clean markup untouched', () => {
     const svg = '<svg><path d="M 0 0"/></svg>'
-    expect(stripScripts(svg)).toBe(svg)
+    expect(sanitizeSvg(svg)).toBe(svg)
+  })
+})
+
+describe('embedded image payloads are sanitized through applySvgTheme', () => {
+  const embed = (inner: string): string => {
+    const b64 = Buffer.from(inner, 'utf8').toString('base64')
+    return `<svg xmlns="http://www.w3.org/2000/svg">`
+      + `<image href="data:image/svg+xml;base64,${b64}" x="1" y="2"/>`
+      + `</svg>`
+  }
+
+  it('drops <script> spliced in from an embedded base64 payload', () => {
+    const out = applySvgTheme(
+      embed('<svg><script>alert(1)</script><rect fill="#000000"/></svg>'),
+    )
+    expect(out).toContain('<rect') // payload still unfolded into the tree
+    expect(out.toLowerCase()).not.toContain('<script')
+    expect(out).not.toContain('alert(1)')
+  })
+
+  it('drops on* event handlers from an embedded base64 payload', () => {
+    const out = applySvgTheme(
+      embed('<svg><rect fill="#000000" onload="evil()"/></svg>'),
+    )
+    expect(out).toContain('<rect')
+    expect(out).not.toContain('onload')
+    expect(out).not.toContain('evil()')
   })
 })
 
