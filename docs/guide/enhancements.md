@@ -7,7 +7,7 @@ keywords:
   - Markdown
 ---
 
-本页收录模板的日常写作增强：数学公式、图标、容器、字体、元数据、品牌色、搜索与花括号防护。Typst 图表与排错手册已拆分为独立页面：
+本页收录模板的日常写作增强：数学公式、图标、容器、字体、元数据、品牌色、搜索、活动日历与花括号防护。Typst 图表与排错手册已拆分为独立页面：
 
 - [Typst 图表](/guide/typst) —— 围栏编译、包缓存与失败行为
 - [常见问题与排查](/guide/troubleshooting) —— 全部构建错误与异常速查
@@ -175,6 +175,17 @@ keywords:
 
 - 同一分词器同时作用于索引构建（Node）与查询（浏览器），函数经 VitePress 序列化下发，必须保持自包含（不可引用外部变量）
 - 中文界面文案已配置；搜索无结果的排查见[常见问题与排查](/guide/troubleshooting#本地搜索无结果)
+
+## 提交活动日历
+
+GitHub 风格提交热力图组件 `<ActivityCalendar />`：构建期聚合仓库 git 历史（近一年），数据随页面负载注入，零运行时请求。
+
+- **内容页自动挂载**：非 home 内容页底部自动渲染**本页**提交记录（`scope="page"`），取代常见的「最后更新于」时间戳位置；全站开关为 `config.mts` 的 `themeConfig.autoPageActivityCalendar`，改为 `false` 后仅保留显式调用
+- **单页豁免**：在该页 frontmatter 写 `activityCalendar: false`
+- **首页显式调用**：home 布局不自动挂载，需要时在 Markdown 直接写 `<ActivityCalendar />`（site 全站粒度），见首页源码 `docs/index.md`
+- 组件细节与实时效果见 [Markdown 扩展示例](/examples/markdown-examples#提交活动日历)
+
+如需恢复 git 时间戳：在 `config.mts` 重新打开 `lastUpdated: true` 并在 `theme/index.ts` 移除 `doc-footer-before` 插槽即可。
 
 ## 站点品牌色
 

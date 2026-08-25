@@ -44,22 +44,25 @@ const keywords = computed(() => normalizeKeywords(frontmatter.value.keywords))
 |---|---|
 | `site` | 站点配置（title、lang、themeConfig 等） |
 | `theme` | 主题配置（nav、sidebar、search 所在之处） |
-| `page` | 当前页元信息（relativePath、lastUpdated 等） |
+| `page` | 当前页元信息（relativePath、git 活动数据等） |
 | `frontmatter` | 当前页 frontmatter（已过构建期校验/归一化） |
 
 ## 布局插槽：doc-before
 
-默认主题在 `DefaultTheme.Layout` 上暴露了一组命名插槽（doc-before / doc-after / aside-* / nav-bar-* 等）。模板用 `doc-before` 把 DocHeader 挂到正文上方（`.vitepress/theme/index.ts`）：
+默认主题在 `DefaultTheme.Layout` 上暴露了一组命名插槽（doc-before / doc-after / doc-footer-before 等）。模板用 `doc-before` 把 DocHeader 挂到正文上方、用 `doc-footer-before` 在内容页底部自动挂载本页提交日历（`.vitepress/theme/index.ts`）：
 
 ```ts
 import { h } from 'vue'
 import DefaultTheme from 'vitepress/theme'
+import AutoActivityCalendar from './components/AutoActivityCalendar.vue'
+import DocHeader from './components/DocHeader.vue'
 
 export default {
   extends: DefaultTheme,
   Layout() {
     return h(DefaultTheme.Layout, null, {
       'doc-before': () => h(DocHeader),
+      'doc-footer-before': () => h(AutoActivityCalendar),
     })
   },
 }

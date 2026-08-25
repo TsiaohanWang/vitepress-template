@@ -10,7 +10,10 @@ import { mustacheGuard } from './markdown-guards.ts'
 import { typstFencePlugin } from './typst.ts'
 
 // ---------------------------------------------------------------------------
-// Git activity for <ActivityCalendar /> (theme/components/ActivityCalendar.vue)
+// Git activity for the activity-calendar components
+//   * theme/components/ActivityCalendar.vue      presentational heatmap
+//   * theme/components/AutoActivityCalendar.vue  auto-mounts scope="page" on
+//                                                non-home content pages
 //
 // `transformPageData` below attaches a per-page `__git` payload built from
 // this data. Everything runs in Node at build/dev time only. Results are
@@ -144,8 +147,9 @@ export default defineConfig({
   description: 'A VitePress Site',
   cleanUrls: true,
 
-  // Git-based "last updated" timestamps.
-  lastUpdated: true,
+  // 页面底部不再展示「最后更新于」时间戳：非 home 内容页的该位置改由
+  // <ActivityCalendar scope="page" /> 自动接管（开关见 themeConfig 的
+  // autoPageActivityCalendar，挂载实现见 theme/components/AutoActivityCalendar.vue）。
 
   head: [
     // Icon set: SVG for modern browsers, ICO fallback (16+32) for the rest,
@@ -194,10 +198,10 @@ export default defineConfig({
     },
   },
 
-  // Attach this repository's git activity to every page payload so
-  // <ActivityCalendar /> can read it client-side via useData() — no extra
-  // files, no runtime fetch (see theme/components/ActivityCalendar.vue for
-  // the consuming side). Collected once per process and re-used per page.
+  // Attach this repository's git activity to every page payload so both
+  // calendar components can read it client-side via useData() — no extra
+  // files, no runtime fetch (see theme/components/ for the consuming side).
+  // Collected once per process and re-used per page.
   transformPageData(pageData) {
     ;(pageData as { __git?: GitActivityPayload }).__git
       = collectGitActivity(pageData.relativePath)
@@ -233,7 +237,10 @@ export default defineConfig({
     darkModeSwitchLabel: '外观',
     outline: { label: '本页内容', level: [2, 3] },
     docFooter: { prev: '上一页', next: '下一页' },
-    lastUpdated: { text: '最后更新于' },
+
+    // 自动活动日历总开关（类型扩展见 theme/index.ts，挂载实现见
+    // AutoActivityCalendar.vue）：false 时仅保留 Markdown 中的显式调用。
+    autoPageActivityCalendar: true,
 
     // Local full-text search. The stock tokenizer splits on whitespace and
     // punctuation only, so Chinese phrases would be indexed as single giant

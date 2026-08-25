@@ -157,20 +157,22 @@ $$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
 
 ## 提交活动日历
 
-全局组件 `ActivityCalendar` 在构建期读取本仓库的 git 历史（`git log` 聚合为每日提交数），渲染成 GitHub 风格的活动热力图。数据经 VitePress 官方 [Build-Time Data Loading](https://vitepress.dev/guide/data-loading) 注入，页面完全离线可用；色阶由站点主题色派生，随明暗模式自动切换。
+全局组件 `ActivityCalendar` 在构建期读取本仓库的 git 历史（`git log` 聚合为每日提交数），渲染成 GitHub 风格的活动热力图。数据经页面负载注入，页面完全离线可用；色阶由站点主题色派生，随明暗模式自动切换。
 
-**显示效果（全站活动，默认）**
+除下方手动用法外，**非 home 内容页底部已自动渲染本页日历**（`scope="page"`）：全站开关为 `config.mts` 中 `themeConfig.autoPageActivityCalendar`（缺省开启），单页豁免用 frontmatter `activityCalendar: false`，详见[内置增强](/guide/enhancements#提交活动日历)。
 
-<ActivityCalendar />
+**显示效果（全站活动，site 粒度）**
+
+<ActivityCalendar scope="site" />
 
 **显示效果（仅本页活动，`scope="page"`）**
 
 <ActivityCalendar scope="page" />
 
-**用法**
+**手动用法**
 
 ```md
-<!-- 全站活动（home 页与内容页均可） -->
+<!-- 全站活动（home 页与内容页均可显式调用） -->
 <ActivityCalendar />
 
 <!-- 仅当前页面的提交历史 -->

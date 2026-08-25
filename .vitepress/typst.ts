@@ -482,13 +482,6 @@ function unfoldEmbeddedSvgImages(svg: string): string {
   )
 }
 
-interface Box {
-  x0: number
-  y0: number
-  x1: number
-  y1: number
-}
-
 function pathGeometry(d: string): { box: Box; polyArea: number } | undefined {
   const tokens = d.match(/[MmLlHhVvCcSsQqTtAaZz]|-?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?/g)
   if (!tokens || tokens.length === 0) return undefined
@@ -942,7 +935,7 @@ export function applySvgTheme(input: string): string {
   //    attributes and style declarations.
   for (const [from, to] of INK_SWAPS) svg = svg.replaceAll(from, to)
 
-  // 4) The canvas path itself gets the paper role (light -> follows
+  // 5) The canvas path itself gets the paper role (light -> follows
   //    --vp-c-bg).
   svg = svg.replace(
     /<path\b([^>]*\bclass="typst-shape"[^>]*?)\bfill="([^"]*)"/,
@@ -955,7 +948,7 @@ export function applySvgTheme(input: string): string {
     },
   )
 
-  // 5) Backed-light pairing (paint-order semantics): an opaque light SHAPE
+  // 6) Backed-light pairing (paint-order semantics): an opaque light SHAPE
   //    immediately followed by painted elements co-adapts with them; an
   //    isolated light mark stays literal. Gradient interiors are skipped
   //    (stops live outside role semantics).
@@ -1008,7 +1001,7 @@ export function applySvgTheme(input: string): string {
     }
   }
 
-  // 6) Theme-aware paints become inline light-dark() values. Element-wise
+  // 7) Theme-aware paints become inline light-dark() values. Element-wise
   //    rewriting avoids <style>/<script>-style tags entirely -- markdown
   //    content is compiled as a client Vue template where those tags are
   //    hard compile errors (ignoreSideEffectTags) and would break docs:dev.
