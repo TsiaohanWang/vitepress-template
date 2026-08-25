@@ -33,6 +33,7 @@
     ".vitepress/**/*.mts",
     ".vitepress/**/*.vue",
     "docs/**/*.ts",
+    "tests/**/*.ts",
     "*.ts",
     "*.mts"
   ]

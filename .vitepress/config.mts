@@ -148,7 +148,14 @@ export default defineConfig({
   lastUpdated: true,
 
   head: [
+    // Icon set: SVG for modern browsers, ICO fallback (16+32) for the rest,
+    // Apple touch icon (full-bleed — iOS applies its own mask).
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    ['link', { rel: 'alternate icon', type: 'image/x-icon', href: '/favicon.ico' }],
+    ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }],
+    // Mobile browser UI tint follows the site color scheme.
+    ['meta', { name: 'theme-color', content: '#ffffff', media: '(prefers-color-scheme: light)' }],
+    ['meta', { name: 'theme-color', content: '#1e1e20', media: '(prefers-color-scheme: dark)' }],
   ],
 
   markdown: {

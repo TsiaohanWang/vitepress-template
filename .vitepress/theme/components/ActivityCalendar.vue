@@ -200,6 +200,9 @@ function hideTip() {
 <style scoped>
 .activity-calendar {
   position: relative;
+  /* Keep clearance from surrounding blocks: on the home layout the markdown
+     body follows the features grid with no intrinsic gap. */
+  margin-top: 24px;
   padding: 16px;
   border-radius: 12px;
   background-color: var(--vp-c-bg-soft);

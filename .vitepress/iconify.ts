@@ -15,11 +15,13 @@ const collections: Record<string, IconifyJSON> = {
 }
 
 // Whitelists for the `=size` / `/color` modifiers: size must be a plain
-// CSS length, color a hex or named value. Anything else is rejected
-// before it can reach the generated SVG attributes/style, so a typo can
-// never inject markup or CSS into the built HTML.
+// CSS length, color a valid-length hex (#rgb / #rgba / #rrggbb / #rrggbbaa)
+// or named value. Anything else is rejected before it can reach the
+// generated SVG attributes/style, so a typo can never inject markup or CSS
+// into the built HTML. Note {3,8}-style ranges would also admit invalid
+// lengths like #12345 -- enumerate the legal widths explicitly.
 const SIZE_PATTERN = /^\d+(?:\.\d+)?(?:em|rem|px|%)?$/
-const COLOR_PATTERN = /^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]+)$/
+const COLOR_PATTERN = /^(?:#[0-9a-fA-F]{3,4}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|[a-zA-Z]+)$/
 
 // Set ICONIFY_STRICT=1 (e.g. in CI) to turn every icon warning into a
 // hard build failure instead of silently dropping the icon.

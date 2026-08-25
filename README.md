@@ -14,7 +14,8 @@
 - **Typst 图表**：```` ```typst ```` 围栏构建期编译为内联 SVG，`CeTZ` / `Alchemist` / `Lilaq` / `Fletcher` / `Tiaoma` / `Physica` / `Zap` / `Atomic` 实测可用；长短围栏区分渲染与源码展示；明暗自适应配色可开关
 - **中文搜索**：本地全文搜索内置 `Intl.Segmenter` CJK 分词器，中文短语可直接命中
 - **SSR 保证**：公式与图标均在 Markdown 编译阶段输出为静态 HTML，页面无客户端数学/图标 JS
-- **CI 就绪**：GitHub Actions 执行 vue-tsc 类型检查 + `ICONIFY_STRICT=1` 硬校验构建
+- **单元测试**：vitest 覆盖图标渲染器/花括号防护/keywords 归一化/Typst 主题适配引擎等纯函数与编译管线
+- **CI 就绪**：GitHub Actions 执行 vue-tsc 类型检查 + vitest 单元测试 + `ICONIFY_STRICT=1` 硬校验构建
 
 > 各项能力的完整说明见站内[内置增强](/guide/enhancements)；构建错误与异常统一查阅[常见问题与排查](/guide/troubleshooting)。
 
@@ -31,6 +32,7 @@ pnpm docs:dev       # 开发服务器 http://localhost:5173（热更新）
 pnpm docs:build     # 生产构建，输出到 .vitepress/dist
 pnpm docs:preview   # 预览构建产物 http://localhost:4173
 pnpm typecheck      # vue-tsc 类型检查
+pnpm test           # vitest 单元测试
 ```
 
 > 注意：`docs:preview` 的静态服务器在启动时缓存 `dist` 文件清单，**每次重新 build 后需重启 preview**，否则新哈希的 CSS/JS 会 404（表现为“有内容但无样式”）。生产部署到静态托管不受影响。
@@ -68,9 +70,11 @@ pnpm typecheck      # vue-tsc 类型检查
 │     └─ typst-diagrams.md    # Typst 图表渲染效果集（9 组·每库一图块）
 ├─ nav.json               # 顶部导航配置
 ├─ sidebar.json           # 侧边栏配置
-├─ package.json           # ESM（type: module）+ docs:* / typecheck 脚本 + engines/packageManager
+├─ package.json           # ESM（type: module）+ docs:* / test / typecheck 脚本 + engines/packageManager
 ├─ pnpm-workspace.yaml    # pnpm 设置（peer 豁免等）
-└─ tsconfig.json          # 严格模式类型检查（.ts/.mts/.vue 全覆盖、JSON 模块等）
+├─ tests/                 # vitest 单元测试（纯函数回归 + Typst 编译管线冒烟）
+├─ tsconfig.json          # 严格模式类型检查（.ts/.mts/.vue 全覆盖、JSON 模块等）
+└─ LICENSE                # MIT 许可证
 ```
 
 分离原理：CLI 以项目根为 root（因此能找到 `.vitepress/`），配置中 `srcDir: 'docs'` 把内容源指向 `docs/`。
@@ -151,10 +155,14 @@ JSON 无法携带类型，`config.mts` 中已做类型断言（`nav as DefaultTh
 pnpm typecheck       # vue-tsc --noEmit
 ```
 
-覆盖 `.vitepress/**/*.ts|.mts|.vue`、`docs/**/*.ts` 与根目录 `.ts`/`.mts`；`.vue` 单文件组件由 vue-tsc 原生解析（含 DocHeader 的模板与脚本），无需类型垫片。JSON 导入依赖 `tsconfig.json` 的 `resolveJsonModule`。
+覆盖 `.vitepress/**/*.ts|.mts|.vue`、`docs/**/*.ts`、`tests/**/*.ts` 与根目录 `.ts`/`.mts`；`.vue` 单文件组件由 vue-tsc 原生解析（含 DocHeader 的模板与脚本），无需类型垫片。JSON 导入依赖 `tsconfig.json` 的 `resolveJsonModule`。
 
 > devDependency 锁定 TypeScript 6 而非 7：TS 7 为原生（Go）实现，不再暴露 JS 版编译器入口，vue-tsc 尚无法包装；待 vue-tsc 支持 TS 7 后可同步升级。`config.mts` 中的相对导入均带 `.ts` 扩展名（配合 `allowImportingTsExtensions`），JSON 导入使用 `with { type: 'json' }` 属性——这是 Vite 8 原生配置加载器的要求，可保证构建输出零警告。
 
 ## 部署
 
 构建产物为纯静态文件（`.vitepress/dist`），可部署至 Netlify / Vercel / GitHub Pages / Nginx 等。启用 `cleanUrls` 时服务端需将 `/path` 回退到 `/path.html`（各平台配置见 [Deploy Guide](https://vitepress.dev/guide/deploy)）。
+
+## 许可证
+
+[MIT](./LICENSE)。使用本模板搭建的站点内容版权归各自的作者所有。

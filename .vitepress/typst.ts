@@ -30,6 +30,32 @@ function getCompiler(): TypstCompiler {
   return compiler
 }
 
+let compilerVersion: string | undefined
+
+function getCompilerVersion(): string {
+  // Resolved through the same runtime require as the addon itself and
+  // memoized, so hash computation stays free after the first call.
+  compilerVersion ??= (
+    nodeRequire(
+      '@myriaddreamin/typst-ts-node-compiler/package.json',
+    ) as { version: string }
+  ).version
+  return compilerVersion
+}
+
+/**
+ * Content hash serving as the compile-cache key. Includes the compiler
+ * version so upgrading the native addon invalidates every cached SVG in one
+ * step (output markup may change between releases) without manual cleanup;
+ * the source alone would keep serving stale figures across upgrades.
+ */
+export function compileCacheKey(source: string): string {
+  return createHash('sha256')
+    .update(`${getCompilerVersion()}\u0000${source}`)
+    .digest('hex')
+    .slice(0, 20)
+}
+
 const cacheDir = path.resolve(import.meta.dirname, 'cache', 'typst-svg')
 
 function readCache(hash: string): string | undefined {
@@ -47,6 +73,16 @@ function writeCache(hash: string, svg: string): void {
   } catch {
     // Cache failures are non-fatal.
   }
+}
+
+// Defense-in-depth sanitizer: drop <script> elements should a Typst package
+// or snippet ever emit them -- compiled figures ship as inline SVG straight
+// into the page DOM. Runs before the compile cache so sanitized markup is
+// what gets persisted (and re-served from cache stays clean).
+const SCRIPT_ELEMENT_RE = /<script\b[^>]*>[\s\S]*?<\/script\s*>|<script\b[^>]*\/\s*>/gi
+
+export function stripScripts(svg: string): string {
+  return svg.replace(SCRIPT_ELEMENT_RE, '')
 }
 
 export interface TypstRenderResult {
@@ -261,11 +297,16 @@ function isOpaque(rgb: RGBa | undefined): boolean {
   return !!rgb && (rgb.a === undefined || rgb.a >= 1)
 }
 
-// Original drawing ink: black or a very dark neutral.
+// Ink pole of the polarity formula: dark achromatic colors act as
+// foreground regardless of element role (text, hairline, filled band).
+// Band edge 0.35: anything at or below reads as "dark on light" in light
+// mode and would be unreadable on a dark page if kept (cf. Dark Reader's
+// achromatic inversion; WCAG contrast against --vp-c-bg is guaranteed by
+// the theme tokens themselves).
 function isInkColor(rgb: RGBa): boolean {
   if (!isOpaque(rgb)) return false
   const { s, l } = rgbToHsl(rgb)
-  return l <= 0.1 && s <= 0.35
+  return l <= 0.35 && s < 0.25
 }
 
 function isNearWhiteRGB(rgb: RGBa): boolean {
@@ -530,70 +571,159 @@ function pathGeometry(d: string): { box: Box; polyArea: number } | undefined {
   return { box, polyArea: Math.abs(polyArea) / 2 }
 }
 
-// Scan for ink elements that sit inside preserved light surfaces / thick
-// bands and therefore violate cluster coherence if left adaptive.
+// ---------------------------------------------------------------------------
+// CLUSTER GEOMETRY (transform-aware)
 //
-// GOVERNING LAW (bidirectional cluster coherence):
-//   backdrop unchanged  ->  its covering ink keeps the ORIGINAL color;
-//   backdrop adapted    ->  its covering ink adapts with it.
-// The pairing scan enforces the "adapted" half upstream; this geometry scan
-// enforces the "unchanged" half.
-function scanPinCandidates(
-  svg: string,
-): Array<{ start: number; end: number; desc: string }> {
+// GOVERNING LAW -- polarity formula over the achromatic axis (S < 0.25),
+// evaluated on HSL lightness of each opaque paint, INDEPENDENT of element
+// role (a black band is ink, however thick it is):
+//
+//   L >= 0.55  paper pole  -- backdrop role only: canvas & confirmed
+//                             backdrops -> var(--vp-c-bg); interior paper
+//                             stays literal and becomes a PINNING ZONE
+//                             whose covering ink is locked black
+//   L <= 0.35  ink pole    -- foreground role: always -> currentColor
+//   0.35<L<0.55 mid neutrals -- preserved (readable on both themes;
+//                             inverting them would flatten shading)
+//   chromatic (S >= 0.25)  -- identity preserved, luminance extremes
+//                             corrected only (see darkCounterpartRGB)
+//
+// Cluster coherence pairs surfaces with the ink they carry:
+//   paper zone (light band/card) -> covering ink LOCKED black
+//   ink zone (dark band)         -> covering paper-pole paint pairs to
+//                                   light-dark(original, var(--vp-c-bg))
+//                                   (white label on a black Gantt bar)
+// Community anchors: Dark Reader achromatic inversion, WCAG contrast via
+// theme tokens, Mermaid semantic roles, single-SVG light-dark() delivery.
+// ---------------------------------------------------------------------------
+
+type Matrix = [number, number, number, number, number, number]
+
+const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0]
+
+function parseMatrixAttr(tag: string): Matrix | undefined {
+  const m = /\btransform="matrix\(([^"]+)\)"/.exec(tag)
+  if (!m) return undefined
+  const p = m[1]!.split(/[\s,]+/).map(Number)
+  if (p.length !== 6 || p.some((n) => Number.isNaN(n))) return undefined
+  return p as Matrix
+}
+
+function mulMatrix(a: Matrix, b: Matrix): Matrix {
+  return [
+    a[0]! * b[0]! + a[2]! * b[1]!,
+    a[1]! * b[0]! + a[3]! * b[1]!,
+    a[0]! * b[2]! + a[2]! * b[3]!,
+    a[1]! * b[2]! + a[3]! * b[3]!,
+    a[0]! * b[4]! + a[2]! * b[5]! + a[4]!,
+    a[1]! * b[4]! + a[3]! * b[5]! + a[5]!,
+  ]
+}
+
+function applyMatrix(m: Matrix, x: number, y: number): [number, number] {
+  return [m[0]! * x + m[2]! * y + m[4]!, m[1]! * x + m[3]! * y + m[5]!]
+}
+
+function mapDeviceBox(m: Matrix, box: Box): Box {
+  const p1 = applyMatrix(m, box.x0, box.y0)
+  const p2 = applyMatrix(m, box.x1, box.y1)
+  return {
+    x0: Math.min(p1[0]!, p2[0]!),
+    y0: Math.min(p1[1]!, p2[1]!),
+    x1: Math.max(p1[0]!, p2[0]!),
+    y1: Math.max(p1[1]!, p2[1]!),
+  }
+}
+
+interface ClusterZone {
+  box: Box
+  /** Offset range of the zone-creating tag (self-pin guard). */
+  tagStart: number
+  tagEnd: number
+}
+
+interface ClusterScan {
+  /** Adaptive-ink tags that must be locked black (paper zones). */
+  pins: Array<{ start: number; end: number; desc: string }>
+  /** Ink-pole bands: contained paper-pole paints pair to the background. */
+  darkZones: ClusterZone[]
+}
+
+function scanClusters(svg: string): ClusterScan {
   const vb = /viewBox="([\d.eE+-]+) ([\d.eE+-]+) ([\d.eE+-]+) ([\d.eE+-]+)"/.exec(svg)
   const minArea = vb
     ? 0.002 * parseFloat(vb[3]!) * parseFloat(vb[4]!)
-    : 0 // noise floor: specks/markers never become pinning zones
+    : 0 // noise floor: specks/markers never become zones
 
   // A "solid" surface fills its bounding box (discs/rects); thin strokes and
   // ring outlines collapse to ~zero polygon area and must never create
-  // pinning zones (a ring's bbox would swallow the whole atom).
+  // zones (a ring's bbox would swallow the whole atom).
   const SOLID_RATIO = 0.12
 
-  const surfaces: Box[] = []
-  const candidates: Array<{ start: number; end: number; desc: string }> = []
+  const lightZones: ClusterZone[] = []
+  const darkZones: ClusterZone[] = []
+  const pins: Array<{ start: number; end: number; desc: string }> = []
   let gradDepth = 0
 
-  for (const m of svg.matchAll(/<[a-zA-Z!/][^>]*>/g)) {
+  // Transform chain: every open tag pushes its parent matrix; typst-ts
+  // emits matrix() exclusively, translations/flips only, |det| == 1, so
+  // local area tests transfer to device space unchanged.
+  let cur: Matrix = IDENTITY
+  const openTags: Array<{ name: string; saved: Matrix }> = []
+
+  for (const m of svg.matchAll(/<(\/?)([a-zA-Z][^>\s/]*)([^<>]*)>/g)) {
+    const close = m[1] === '/'
+    const name = m[2]!
     const tag = m[0]
-    if (tag.startsWith('</')) {
+    const attrs = m[3] ?? ''
+    if (close) {
+      const top = openTags.pop()
+      if (top && top.name === name) cur = top.saved
       if (/gradient>$/i.test(tag) && gradDepth > 0) gradDepth--
       continue
     }
+    const tm = parseMatrixAttr(attrs)
+    if (tm) cur = mulMatrix(cur, tm)
+    const selfClosing = /\/\>\s*$/.test(tag)
+    if (!selfClosing) openTags.push({ name, saved: cur })
+
     if (/<(linear|radial)Gradient\b/.test(tag)) {
       gradDepth++
       continue
     }
     if (gradDepth > 0) continue // stops live outside role semantics
     if (m.index === undefined) continue
+    const tagStart = m.index
+    const tagEnd = tagStart + tag.length
 
     const cls = /class="([^"]*)"/.exec(tag)?.[1] ?? ''
     const fillMatch = /\bfill="([^"]*)"/.exec(tag)
     const fillRgb = fillMatch?.[1] ? parseColorValue(fillMatch[1]) : undefined
     const dMatch = /\bd="([^"]+)"/.exec(tag)
 
-    // THICK-STROKE BANDS probe-insert
-
-    // THICK-STROKE BANDS (Gantt/task bars): stroke-width >= 6pt acts as a
-    // surface -- the band keeps its original polarity and covering ink is
-    // pinned along with it. Threshold far above line-weight conventions,
-    // far below figure dims -> generalizes across libraries.
+    // THICK-STROKE BANDS (Gantt/task bars): stroke-width >= 6pt carries
+    // surface polarity -- paper-pole bands become pinning zones, ink-pole
+    // bands become dark-card zones. Threshold far above line-weight
+    // conventions, far below figure dims -> generalizes across libraries.
     const swNum = /\bstroke-width="([\d.]+)"/.exec(tag)
     if (swNum?.[1] && parseFloat(swNum[1]) >= 6 && dMatch?.[1]) {
       const geo = pathGeometry(dMatch[1])
       if (geo) {
         const half = parseFloat(swNum[1]) / 2
-        surfaces.push({
+        const local: Box = {
           x0: geo.box.x0 - half,
           y0: geo.box.y0 - half,
           x1: geo.box.x1 + half,
           y1: geo.box.y1 + half,
-        })
+        }
+        const strokeRgb = parseColorValue(/\bstroke="([^"]*)"/.exec(tag)?.[1] ?? '')
+        const zone: ClusterZone = { box: mapDeviceBox(cur, local), tagStart, tagEnd }
+        if (strokeRgb && isLightSurfaceRGB(strokeRgb)) lightZones.push(zone)
+        else if (strokeRgb && isInkColor(strokeRgb)) darkZones.push(zone)
       }
     }
 
-    // Preserved literal light OPAQUE solid shape -> protected surface.
+    // Preserved literal light OPAQUE solid shape -> protected paper zone.
     if (
       cls.includes('typst-shape') &&
       fillMatch?.[1] &&
@@ -608,7 +738,7 @@ function scanPinCandidates(
         (geo.box.x1 - geo.box.x0) * (geo.box.y1 - geo.box.y0) >= minArea &&
         geo.polyArea >= SOLID_RATIO * (geo.box.x1 - geo.box.x0) * (geo.box.y1 - geo.box.y0)
       ) {
-        surfaces.push(geo.box)
+        lightZones.push({ box: mapDeviceBox(cur, geo.box), tagStart, tagEnd })
       }
     }
 
@@ -622,47 +752,51 @@ function scanPinCandidates(
       isLightSurfaceRGB(fillRgb) &&
       tag.includes('currentColor')
     ) {
-      candidates.push({
-        start: m.index,
-        end: m.index + tag.length,
-        desc: 'self-pin',
-      })
+      pins.push({ start: tagStart, end: tagEnd, desc: 'self-pin' })
       selfPinned = true
     }
 
-    // Containment candidates: currentColor elements centered inside any
-    // protected surface.
+    // Containment candidates: currentColor elements whose device-space
+    // center falls inside a paper zone.
     if (tag.includes('currentColor') && !selfPinned) {
       const d = dMatch?.[1]
       const usePos = /\bx="([\d.eE+-]+)".*?\by="([\d.eE+-]+)"/.exec(tag)
-      let box: Box | undefined
-      if (d) box = pathGeometry(d)?.box
-      else if (usePos) {
-        const ux = parseFloat(usePos[1]!)
-        const uy = parseFloat(usePos[2]!)
-        box = { x0: ux, y0: uy, x1: ux + 1, y1: uy + 1 }
+      let center: [number, number] | undefined
+      if (d) {
+        const geo = pathGeometry(d)
+        if (geo) {
+          center = applyMatrix(
+            cur,
+            (geo.box.x0 + geo.box.x1) / 2,
+            (geo.box.y0 + geo.box.y1) / 2,
+          )
+        }
+      } else if (usePos) {
+        center = applyMatrix(cur, parseFloat(usePos[1]!), parseFloat(usePos[2]!))
       }
       if (
-        box &&
-        surfaces.some((s) => {
-          const mx = (box!.x0 + box!.x1) / 2
-          const my = (box!.y0 + box!.y1) / 2
-          return mx >= s.x0 && mx <= s.x1 && my >= s.y0 && my <= s.y1
-        })
+        center &&
+        lightZones.some(
+          (z) =>
+            center![0] >= z.box.x0 && center![0] <= z.box.x1
+            && center![1] >= z.box.y0 && center![1] <= z.box.y1,
+        )
       ) {
-        candidates.push({
-          start: m.index,
-          end: m.index + tag.length,
-          desc: 'containment',
-        })
+        pins.push({ start: tagStart, end: tagEnd, desc: 'containment' })
       }
     }
   }
-  return candidates
+  return { pins, darkZones }
+}
+
+function scanPinCandidates(
+  svg: string,
+): Array<{ start: number; end: number; desc: string }> {
+  return scanClusters(svg).pins
 }
 
 function pinInkOverLiteralSurfaces(svg: string): string {
-  const candidates = scanPinCandidates(svg)
+  const candidates = scanClusters(svg).pins
 
   // Revert from the end backwards so earlier offsets stay valid.
   for (const cand of candidates.reverse()) {
@@ -673,6 +807,93 @@ function pinInkOverLiteralSurfaces(svg: string): string {
       .replaceAll('fill:currentColor', 'fill:#000000')
       .replaceAll('stroke:currentColor', 'stroke:#000000')
     svg = svg.slice(0, cand.start) + reverted + svg.slice(cand.end)
+  }
+  return svg
+}
+
+// Inverted clusters: paper-pole paints carried OVER an ink-pole band
+// (white percentage label on a black Gantt bar). The band adapts to
+// currentColor, so its light paint pairs with the background instead --
+// light mode keeps white-on-black, dark mode shows bg-on-text-colored.
+function pairLightOverDarkBands(svg: string): string {
+  const { darkZones } = scanClusters(svg)
+  if (darkZones.length === 0) return svg
+
+  const edits: Array<{ start: number; end: number; text: string }> = []
+  let gradDepth = 0
+  let cur: Matrix = IDENTITY
+  const openTags: Array<{ name: string; saved: Matrix }> = []
+
+  for (const m of svg.matchAll(/<(\/?)([a-zA-Z][^>\s/]*)([^<>]*)>/g)) {
+    const close = m[1] === '/'
+    const name = m[2]!
+    const tag = m[0]
+    const attrs = m[3] ?? ''
+    if (close) {
+      const top = openTags.pop()
+      if (top && top.name === name) cur = top.saved
+      if (/gradient>$/i.test(tag) && gradDepth > 0) gradDepth--
+      continue
+    }
+    const tm = parseMatrixAttr(attrs)
+    if (tm) cur = mulMatrix(cur, tm)
+    const selfClosing = /\/\>\s*$/.test(tag)
+    if (!selfClosing) openTags.push({ name, saved: cur })
+
+    if (/<(linear|radial)Gradient\b/.test(tag)) {
+      gradDepth++
+      continue
+    }
+    if (gradDepth > 0) continue
+    if (m.index === undefined) continue
+
+    // The band element itself never pairs with itself.
+    if (darkZones.some((z) => z.tagStart === m.index)) continue
+
+    for (const prop of ['fill', 'stroke'] as const) {
+      const attrRe = new RegExp(`\\b${prop}="([^"]*)"`)
+      const attr = attrRe.exec(tag)
+      const raw = attr?.[1]
+      if (!raw || raw.length > 7) continue
+      const rgb = parseColorValue(raw)
+      if (!rgb || !isLightSurfaceRGB(rgb)) continue
+
+      const d = /\bd="([^"]+)"/.exec(tag)?.[1]
+      const usePos = /\bx="([\d.eE+-]+)".*?\by="([\d.eE+-]+)"/.exec(tag)
+      let center: [number, number] | undefined
+      if (d) {
+        const geo = pathGeometry(d)
+        if (geo) {
+          center = applyMatrix(cur, (geo.box.x0 + geo.box.x1) / 2, (geo.box.y0 + geo.box.y1) / 2)
+        }
+      } else if (usePos) {
+        center = applyMatrix(cur, parseFloat(usePos[1]!), parseFloat(usePos[2]!))
+      }
+      if (!center) continue
+      const inside = darkZones.some(
+        (z) =>
+          center![0] >= z.box.x0 && center![0] <= z.box.x1
+          && center![1] >= z.box.y0 && center![1] <= z.box.y1,
+      )
+      if (!inside) continue
+
+      const mapped = `light-dark(${raw}, var(--vp-c-bg))`
+      const stripped = tag.replace(attrRe, '')
+      const open = stripped.endsWith('/>') ? -2 : -1
+      const existing = /\sstyle="([^"]*)"/.exec(stripped)
+      let text: string
+      if (existing?.[1] !== undefined) {
+        text = stripped.replace(/\sstyle="[^"]*"/, ` style="${existing[1]}${prop}:${mapped};"`)
+      } else {
+        text = `${stripped.slice(0, open)} style="${prop}:${mapped};"${stripped.slice(open)}`
+      }
+      edits.push({ start: m.index, end: m.index + tag.length, text })
+      break
+    }
+  }
+
+  for (const e of edits.reverse()) {
+    svg = svg.slice(0, e.start) + e.text + svg.slice(e.end)
   }
   return svg
 }
@@ -696,7 +917,12 @@ export function applySvgTheme(input: string): string {
   const bgRgb = bgMatch?.[1] ? parseColorValue(bgMatch[1]) : undefined
   if (bgMatch?.[1] && bgRgb && isOpaque(bgRgb) && !isLightSurfaceRGB(bgRgb)) return svg
 
-  // 3) Ink: currentColor is a CSS-wide keyword, valid both in presentation
+  // 3) Inverted clusters first: paper-pole paints over ink-pole bands pair
+  //    with the background while the band color is still literal (the ink
+  //    swap below would erase the polarity evidence).
+  svg = pairLightOverDarkBands(svg)
+
+  // 4) Ink: currentColor is a CSS-wide keyword, valid both in presentation
   //    attributes and style declarations.
   for (const [from, to] of INK_SWAPS) svg = svg.replaceAll(from, to)
 
@@ -822,8 +1048,9 @@ export function applySvgTheme(input: string): string {
     svg = svg.slice(0, e.start) + e.text + svg.slice(e.end)
   }
 
-  // 7) Geometry pinning runs LAST: it reverts covering ink to literal black,
-  //    and nothing after it may reinterpret that decision.
+  // 8) Cluster enforcement runs LAST: geometry pinning reverts covering
+  //    ink to literal black -- nothing after this point may reinterpret
+  //    that decision. (Light-over-dark pairing ran early, step 3.)
   svg = pinInkOverLiteralSurfaces(svg)
   return svg
 }
@@ -836,7 +1063,7 @@ export interface TypstFenceOptions {
 }
 
 export function renderTypst(source: string): TypstRenderResult {
-  const hash = createHash('sha256').update(source).digest('hex').slice(0, 20)
+  const hash = compileCacheKey(source)
 
   const cached = readCache(hash)
   if (cached !== undefined) return { svg: cached }
@@ -855,6 +1082,7 @@ export function renderTypst(source: string): TypstRenderResult {
     return { error: 'Typst compilation failed (see diagnostics above)' }
   }
 
+  svg = stripScripts(svg)
   writeCache(hash, svg)
   return { svg }
 }

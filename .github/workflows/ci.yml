@@ -5,6 +5,15 @@ on:
     branches: [main]
   pull_request:
 
+# Least privilege: the workflow never needs write access to anything.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same branch/PR instead of queueing them.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -21,15 +30,23 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # Rolling key: `run_id` is unique per run, so every build saves a fresh
+      # archive; `restore-keys` seeds it with the newest previous snapshot.
+      # Packages therefore accumulate across builds instead of freezing at a
+      # static key that can never pick up newly added @preview dependencies.
       - name: Cache Typst packages
         uses: actions/cache@v4
         with:
           path: ~/.cache/typst/packages
-          key: typst-packages-v1
+          key: typst-packages-${{ github.run_id }}
+          restore-keys: |
+            typst-packages-
 
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm typecheck
+
+      - run: pnpm test
 
       # Hard-fail on broken icon syntax (warnings are not enough in CI);
       # Typst fences already fail soft by design, their errors surface in logs.
