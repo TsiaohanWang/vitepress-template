@@ -27,3 +27,5 @@ features:
   - title: Typst 科学图表
     details: "```typst 围栏构建期编译为内联 SVG——CeTZ、Alchemist、Lilaq、Fletcher、Tiaoma、Physica、Zap、Atomic 实测可用，失败不中断构建。"
 ---
+
+<ActivityCalendar />

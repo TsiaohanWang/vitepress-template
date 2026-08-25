@@ -154,3 +154,27 @@ $$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
 | 表头默认居中 | 写法决定单元格 | `:---:` | `---:` |
 
 表头未指定对齐时默认居中（模板增强）；列对齐语法对单元格仍然生效。
+
+## 提交活动日历
+
+全局组件 `ActivityCalendar` 在构建期读取本仓库的 git 历史（`git log` 聚合为每日提交数），渲染成 GitHub 风格的活动热力图。数据经 VitePress 官方 [Build-Time Data Loading](https://vitepress.dev/guide/data-loading) 注入，页面完全离线可用；色阶由站点主题色派生，随明暗模式自动切换。
+
+**显示效果（全站活动，默认）**
+
+<ActivityCalendar />
+
+**显示效果（仅本页活动，`scope="page"`）**
+
+<ActivityCalendar scope="page" />
+
+**用法**
+
+```md
+<!-- 全站活动（home 页与内容页均可） -->
+<ActivityCalendar />
+
+<!-- 仅当前页面的提交历史 -->
+<ActivityCalendar scope="page" />
+```
+
+组件已全局注册，宽度自适应容器。

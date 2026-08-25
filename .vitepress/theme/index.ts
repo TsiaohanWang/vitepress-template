@@ -3,6 +3,7 @@ import '@fontsource/jetbrains-mono/700.css'
 import { h } from 'vue'
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
+import ActivityCalendar from './components/ActivityCalendar.vue'
 import DocHeader from './components/DocHeader.vue'
 // Keep this import LAST so custom.css can win equal-specificity ties
 // against the default theme's styles.
@@ -18,7 +19,9 @@ export default {
     })
   },
 
-  enhanceApp() {
-    // Extend the default theme here, e.g. register global components.
+  enhanceApp({ app }) {
+    // Globally registered so any page — home layout or regular content — can
+    // drop in <ActivityCalendar /> without imports.
+    app.component('ActivityCalendar', ActivityCalendar)
   },
 } satisfies Theme
