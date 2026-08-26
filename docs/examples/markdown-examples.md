@@ -159,7 +159,7 @@ $$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
 
 全局组件 `ActivityCalendar` 在构建期读取本仓库的 git 历史（`git log` 聚合为每日提交数），渲染成 GitHub 风格的活动热力图。数据经页面负载注入，页面完全离线可用；色阶由站点主题色派生，随明暗模式自动切换。
 
-除下方手动用法外，**非 home 内容页底部已自动渲染本页日历**（`scope="page"`）：全站开关为 `config.mts` 中 `themeConfig.autoPageActivityCalendar`（缺省开启），单页豁免用 frontmatter `activityCalendar: false`，详见[内置增强](/guide/enhancements#提交活动日历)。
+此外还可让**非 home 内容页底部自动渲染本页日历**（`scope="page"`）：在 `config.mts` 将 `themeConfig.autoPageActivityCalendar` 设为 `true` 开启（模板默认关闭），单页豁免用 frontmatter `activityCalendar: false`，详见[内置增强](/guide/enhancements#提交活动日历)。
 
 **显示效果（全站活动，site 粒度）**
 

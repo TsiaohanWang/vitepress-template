@@ -180,7 +180,7 @@ keywords:
 
 GitHub 风格提交热力图组件 `<ActivityCalendar />`：构建期聚合仓库 git 历史（近一年），数据随页面负载注入，零运行时请求。
 
-- **内容页自动挂载**：非 home 内容页底部自动渲染**本页**提交记录（`scope="page"`），取代常见的「最后更新于」时间戳位置；全站开关为 `config.mts` 的 `themeConfig.autoPageActivityCalendar`，改为 `false` 后仅保留显式调用
+- **内容页自动挂载（可选）**：将 `themeConfig.autoPageActivityCalendar` 设为 `true` 后，非 home 内容页底部自动渲染**本页**提交记录（`scope="page"`），取代常见的「最后更新于」时间戳位置；开关位于 `config.mts`，**模板默认关闭**，开启后单页仍可用 frontmatter 的 `activityCalendar: false` 豁免
 - **单页豁免**：在该页 frontmatter 写 `activityCalendar: false`
 - **首页显式调用**：home 布局不自动挂载，需要时在 Markdown 直接写 `<ActivityCalendar />`（site 全站粒度），见首页源码 `docs/index.md`
 - 组件细节与实时效果见 [Markdown 扩展示例](/examples/markdown-examples#提交活动日历)

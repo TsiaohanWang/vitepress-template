@@ -17,9 +17,9 @@ declare module 'vitepress' {
   namespace DefaultTheme {
     interface Config {
       /**
-       * 非 home 内容页底部自动挂载本页提交日历（scope="page"）。
-       * 默认开启；设为 false 后仅保留 Markdown 中显式的 <ActivityCalendar />。
-       * 单页豁免：在该页 frontmatter 写 activityCalendar: false。
+       * 在非 home 内容页底部自动挂载本页提交日历（scope="page"）。
+       * 默认关闭；设为 true 开启。开启后单页仍可用 frontmatter 的
+       * activityCalendar: false 豁免。
        */
       autoPageActivityCalendar?: boolean
     }
@@ -34,8 +34,8 @@ export default {
       // Frontmatter-driven header above the document content (SSR-rendered).
       'doc-before': () => h(DocHeader),
       // 非 home 内容页底部自动挂载本页提交日历（取代 lastUpdated 的位置）：
-      // 开关是 themeConfig.autoPageActivityCalendar（缺省开启），
-      // 单页豁免用 frontmatter activityCalendar: false。
+      // 开关是 themeConfig.autoPageActivityCalendar（默认关闭，设 true 开启），
+      // 开启后单页豁免用 frontmatter activityCalendar: false。
       'doc-footer-before': () => h(AutoActivityCalendar),
     })
   },

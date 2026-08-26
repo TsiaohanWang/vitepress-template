@@ -6,10 +6,10 @@ import ActivityCalendar from './ActivityCalendar.vue'
 /**
  * 内容页底部的自动挂载点（经主题的 doc-footer-before 插槽渲染）：
  *
- * - 全站开关：themeConfig.autoPageActivityCalendar（缺省开启，
- *   在 config.mts 中配置，类型扩展见 theme/index.ts）；
+ * - 全站开关：themeConfig.autoPageActivityCalendar（默认关闭，
+ *   设为 true 开启；在 config.mts 中配置，类型扩展见 theme/index.ts）；
  * - home 布局永不自动挂载——首页由 Markdown 显式调用 <ActivityCalendar />；
- * - 单页豁免：frontmatter 写 activityCalendar: false；
+ * - 单页豁免：开关开启后，frontmatter 写 activityCalendar: false 可单独关掉某页；
  *
  * 展示 page 粒度数据（仅触及当前 Markdown 文件的提交）。可见性只依赖
  * frontmatter 与站点配置，SSR 与水合结果一致。
@@ -18,7 +18,7 @@ const { frontmatter, theme } = useData()
 
 const visible = computed(
   () =>
-    theme.value.autoPageActivityCalendar !== false &&
+    theme.value.autoPageActivityCalendar === true &&
     frontmatter.value.layout !== 'home' &&
     frontmatter.value.activityCalendar !== false,
 )

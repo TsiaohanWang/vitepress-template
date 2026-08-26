@@ -238,9 +238,10 @@ export default defineConfig({
     outline: { label: '本页内容', level: [2, 3] },
     docFooter: { prev: '上一页', next: '下一页' },
 
-    // 自动活动日历总开关（类型扩展见 theme/index.ts，挂载实现见
-    // AutoActivityCalendar.vue）：false 时仅保留 Markdown 中的显式调用。
-    autoPageActivityCalendar: true,
+    // 自动活动日历总开关（默认关闭；类型扩展见 theme/index.ts，挂载实现见
+    // AutoActivityCalendar.vue）：设为 true 后，非 home 内容页底部自动挂载
+    // 本页提交日历（单页豁免用 frontmatter activityCalendar: false）。
+    autoPageActivityCalendar: false,
 
     // Local full-text search. The stock tokenizer splits on whitespace and
     // punctuation only, so Chinese phrases would be indexed as single giant
